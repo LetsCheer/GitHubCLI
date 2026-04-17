@@ -1,0 +1,12 @@
+Here's your complete GitHub CLI Cheat Sheet — a single index.html file ready to run in any browser.
+What's inside:
+
+20 categories covering every command group from the official manual — auth, repo, pr, issue, workflow, run, release, gist, secret, codespace, search, and more
+100+ commands each with a title, description, full syntax, flags table, and practical examples
+Copy buttons on every example code block (hover to reveal)
+Command Palette (⌘K) — fuzzy search across all commands with keyboard navigation (↑↓ + Enter)
+Sidebar filter — real-time filtering with instant show/hide of categories and commands
+Scroll spy — active nav item highlights as you scroll
+Collapsible sections — click any category header to collapse/expand
+Mobile drawer — hamburger menu toggles the sidebar on small screens
+Glassmorphism dark theme — custom color-coded per category (auth = blue, issues = red, workflows = green, etc.)

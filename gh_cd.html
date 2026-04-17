@@ -1,0 +1,3252 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub CLI — Cheat Sheet</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Syne:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-void: #060810;
+            --bg-deep: #0b0f1a;
+            --bg-surface: #0f1422;
+            --bg-card: #141929;
+            --bg-hover: #1a2035;
+            --glass-bg: rgba(15, 20, 34, 0.7);
+            --glass-border: rgba(99, 140, 255, 0.12);
+            --glass-shine: rgba(255, 255, 255, 0.04);
+            --accent-primary: #4f8bff;
+            --accent-secondary: #7c5cff;
+            --accent-cyan: #00d4ff;
+            --accent-green: #00e5a0;
+            --accent-orange: #ff8c42;
+            --accent-red: #ff4d6d;
+            --accent-yellow: #ffd166;
+            --text-primary: #e8edf8;
+            --text-secondary: #8a95b0;
+            --text-muted: #4a5270;
+            --text-code: #a8d8ff;
+            --sidebar-width: 270px;
+            --topbar-height: 60px;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --shadow-glow: 0 0 30px rgba(79, 139, 255, 0.15);
+            --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.4);
+            --font-mono: 'JetBrains Mono', monospace;
+            --font-display: 'Syne', sans-serif;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-display);
+            background: var(--bg-void);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── NOISE TEXTURE ── */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ── TOP BAR ── */
+        .topbar {
+            height: var(--topbar-height);
+            background: rgba(6, 8, 16, 0.85);
+            backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 16px;
+            position: relative;
+            z-index: 100;
+            flex-shrink: 0;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: -1px;
+        }
+
+        .logo-text {
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            color: var(--text-primary);
+            white-space: nowrap;
+        }
+
+        .logo-badge {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            background: rgba(79, 139, 255, 0.15);
+            border: 1px solid rgba(79, 139, 255, 0.3);
+            color: var(--accent-primary);
+            padding: 2px 6px;
+            border-radius: 4px;
+            letter-spacing: 0.05em;
+        }
+
+        /* ── COMMAND PALETTE ── */
+        .palette-wrap {
+            flex: 1;
+            max-width: 520px;
+            position: relative;
+        }
+
+        .palette-input-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .palette-icon {
+            position: absolute;
+            left: 12px;
+            color: var(--text-muted);
+            font-size: 13px;
+            pointer-events: none;
+        }
+
+        .palette-kbd {
+            position: absolute;
+            right: 10px;
+            font-family: var(--font-mono);
+            font-size: 10px;
+            color: var(--text-muted);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 2px 6px;
+            border-radius: 4px;
+            pointer-events: none;
+        }
+
+        .palette-input {
+            width: 100%;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+            font-size: 13px;
+            padding: 0 80px 0 36px;
+            outline: none;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .palette-input:focus {
+            background: rgba(79, 139, 255, 0.06);
+            border-color: rgba(79, 139, 255, 0.4);
+            box-shadow: 0 0 0 3px rgba(79, 139, 255, 0.08);
+        }
+
+        .palette-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .palette-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            right: 0;
+            background: rgba(11, 15, 26, 0.97);
+            backdrop-filter: blur(24px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-card), var(--shadow-glow);
+            max-height: 340px;
+            overflow-y: auto;
+            z-index: 999;
+            display: none;
+        }
+
+        .palette-dropdown.open {
+            display: block;
+        }
+
+        .palette-result {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 14px;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            transition: background 0.15s;
+        }
+
+        .palette-result:hover,
+        .palette-result.active {
+            background: rgba(79, 139, 255, 0.1);
+        }
+
+        .palette-result:last-child {
+            border-bottom: none;
+        }
+
+        .palette-result-cmd {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--accent-cyan);
+            flex-shrink: 0;
+            min-width: 170px;
+        }
+
+        .palette-result-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .palette-result-cat {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-left: auto;
+            flex-shrink: 0;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .palette-empty {
+            padding: 20px;
+            text-align: center;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            flex-shrink: 0;
+        }
+
+        .mobile-menu-btn span {
+            display: block;
+            width: 18px;
+            height: 1.5px;
+            background: var(--text-secondary);
+            border-radius: 2px;
+            transition: all 0.3s;
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+
+        .topbar-link {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--text-muted);
+            text-decoration: none;
+            padding: 4px 10px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: var(--radius-sm);
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .topbar-link:hover {
+            color: var(--accent-primary);
+            border-color: rgba(79, 139, 255, 0.3);
+            background: rgba(79, 139, 255, 0.06);
+        }
+
+        /* ── MAIN LAYOUT ── */
+        .layout {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ── SIDEBAR ── */
+        .sidebar {
+            width: var(--sidebar-width);
+            flex-shrink: 0;
+            background: rgba(9, 12, 22, 0.8);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid var(--glass-border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .sidebar-search-wrap {
+            padding: 12px;
+            border-bottom: 1px solid var(--glass-border);
+            flex-shrink: 0;
+        }
+
+        .sidebar-search {
+            width: 100%;
+            height: 34px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+            font-size: 12px;
+            padding: 0 10px 0 30px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .sidebar-search:focus {
+            border-color: rgba(79, 139, 255, 0.35);
+            background: rgba(79, 139, 255, 0.05);
+        }
+
+        .sidebar-search::placeholder {
+            color: var(--text-muted);
+        }
+
+        .sidebar-search-icon {
+            position: absolute;
+            left: 22px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 11px;
+            pointer-events: none;
+        }
+
+        .sidebar-search-wrap {
+            position: relative;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 0;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(79, 139, 255, 0.2) transparent;
+        }
+
+        .sidebar-nav::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .sidebar-nav::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar-nav::-webkit-scrollbar-thumb {
+            background: rgba(79, 139, 255, 0.2);
+            border-radius: 2px;
+        }
+
+        .nav-category {
+            margin-bottom: 2px;
+        }
+
+        .nav-cat-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 14px;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.15s;
+            border-radius: 0;
+        }
+
+        .nav-cat-header:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .nav-cat-icon {
+            width: 18px;
+            height: 18px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            flex-shrink: 0;
+        }
+
+        .nav-cat-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            flex: 1;
+        }
+
+        .nav-cat-arrow {
+            font-size: 10px;
+            color: var(--text-muted);
+            transition: transform 0.2s;
+        }
+
+        .nav-cat-header.collapsed .nav-cat-arrow {
+            transform: rotate(-90deg);
+        }
+
+        .nav-cat-items {
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .nav-cat-items.collapsed {
+            max-height: 0 !important;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 14px 5px 38px;
+            cursor: pointer;
+            font-family: var(--font-mono);
+            font-size: 11.5px;
+            color: var(--text-muted);
+            border-left: 2px solid transparent;
+            transition: all 0.15s;
+            text-decoration: none;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .nav-item:hover {
+            color: var(--text-secondary);
+            background: rgba(79, 139, 255, 0.05);
+            border-left-color: rgba(79, 139, 255, 0.3);
+        }
+
+        .nav-item.active {
+            color: var(--accent-primary);
+            background: rgba(79, 139, 255, 0.08);
+            border-left-color: var(--accent-primary);
+        }
+
+        .nav-item-dot {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: currentColor;
+            opacity: 0.5;
+            flex-shrink: 0;
+        }
+
+        .nav-item.hidden {
+            display: none;
+        }
+
+        .nav-category.hidden {
+            display: none;
+        }
+
+        /* ── CONTENT ── */
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 32px 40px 80px;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(79, 139, 255, 0.2) transparent;
+        }
+
+        .content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .content::-webkit-scrollbar-thumb {
+            background: rgba(79, 139, 255, 0.2);
+            border-radius: 3px;
+        }
+
+        /* ── HERO ── */
+        .hero {
+            text-align: center;
+            padding: 48px 20px 56px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -60px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 600px;
+            height: 300px;
+            background: radial-gradient(ellipse, rgba(79, 139, 255, 0.12) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero-eyebrow {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            letter-spacing: 0.15em;
+            color: var(--accent-primary);
+            text-transform: uppercase;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .hero-eyebrow::before,
+        .hero-eyebrow::after {
+            content: '';
+            display: block;
+            width: 40px;
+            height: 1px;
+            background: linear-gradient(to right, transparent, var(--accent-primary));
+        }
+
+        .hero-eyebrow::after {
+            background: linear-gradient(to left, transparent, var(--accent-primary));
+        }
+
+        .hero-title {
+            font-size: clamp(32px, 5vw, 52px);
+            font-weight: 800;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #fff 30%, var(--accent-primary) 70%, var(--accent-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 16px;
+        }
+
+        .hero-sub {
+            font-size: 15px;
+            color: var(--text-secondary);
+            max-width: 480px;
+            margin: 0 auto 28px;
+            line-height: 1.6;
+        }
+
+        .hero-stats {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .hero-stat {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            padding: 10px 20px;
+            backdrop-filter: blur(12px);
+        }
+
+        .hero-stat-num {
+            font-family: var(--font-mono);
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--accent-primary);
+        }
+
+        .hero-stat-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-top: 2px;
+        }
+
+        /* ── SECTION ── */
+        .cmd-section {
+            margin-bottom: 16px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 0 10px;
+            border-bottom: 1px solid var(--glass-border);
+            margin-bottom: 12px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .section-header:hover .section-title {
+            color: var(--accent-primary);
+        }
+
+        .section-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+            font-family: var(--font-mono);
+            font-weight: 700;
+            letter-spacing: -1px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+            transition: color 0.2s;
+        }
+
+        .section-desc {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-left: auto;
+            font-family: var(--font-mono);
+        }
+
+        .section-toggle {
+            color: var(--text-muted);
+            font-size: 12px;
+            margin-left: 4px;
+            transition: transform 0.3s;
+        }
+
+        .section-header.collapsed .section-toggle {
+            transform: rotate(-90deg);
+        }
+
+        .section-body {
+            overflow: hidden;
+            transition: max-height 0.4s ease;
+        }
+
+        .section-body.collapsed {
+            max-height: 0 !important;
+        }
+
+        /* ── COMMAND CARD ── */
+        .cmd-card {
+            background: var(--bg-card);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            margin-bottom: 10px;
+            overflow: hidden;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .cmd-card:hover {
+            border-color: rgba(79, 139, 255, 0.25);
+            box-shadow: var(--shadow-card);
+        }
+
+        .cmd-card-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 14px 16px 12px;
+            cursor: pointer;
+        }
+
+        .cmd-badge {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 4px;
+            white-space: nowrap;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .cmd-name {
+            font-family: var(--font-mono);
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-code);
+            word-break: break-all;
+        }
+
+        .cmd-short-desc {
+            font-size: 12.5px;
+            color: var(--text-secondary);
+            margin-top: 3px;
+            line-height: 1.4;
+        }
+
+        .cmd-card-body {
+            padding: 0 16px 14px;
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .cmd-section-label {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin: 10px 0 6px;
+        }
+
+        .cmd-syntax {
+            font-family: var(--font-mono);
+            font-size: 12.5px;
+            color: var(--accent-green);
+            background: rgba(0, 229, 160, 0.04);
+            border: 1px solid rgba(0, 229, 160, 0.12);
+            border-radius: var(--radius-sm);
+            padding: 8px 12px;
+            overflow-x: auto;
+            white-space: pre;
+        }
+
+        .cmd-flags {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-top: 2px;
+        }
+
+        .cmd-flag {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.02);
+            font-size: 12px;
+        }
+
+        .cmd-flag-name {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--accent-yellow);
+            flex-shrink: 0;
+            min-width: 140px;
+        }
+
+        .cmd-flag-desc {
+            color: var(--text-secondary);
+        }
+
+        /* ── EXAMPLES ── */
+        .examples-block {
+            margin-top: 6px;
+        }
+
+        .example-item {
+            position: relative;
+            margin-bottom: 8px;
+        }
+
+        .example-comment {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 3px;
+            padding-left: 4px;
+        }
+
+        .example-code-wrap {
+            position: relative;
+            display: flex;
+            align-items: stretch;
+        }
+
+        .example-code {
+            flex: 1;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: var(--radius-sm);
+            padding: 8px 12px 8px 36px;
+            color: var(--text-primary);
+            overflow-x: auto;
+            white-space: pre;
+            line-height: 1.5;
+            position: relative;
+        }
+
+        .example-code::before {
+            content: '$';
+            position: absolute;
+            left: 12px;
+            top: 8px;
+            color: var(--accent-primary);
+            font-weight: 600;
+            pointer-events: none;
+        }
+
+        .copy-btn {
+            position: absolute;
+            right: 6px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 26px;
+            height: 26px;
+            background: rgba(79, 139, 255, 0.1);
+            border: 1px solid rgba(79, 139, 255, 0.2);
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-primary);
+            font-size: 10px;
+            opacity: 0;
+            transition: opacity 0.2s, background 0.2s;
+        }
+
+        .example-code-wrap:hover .copy-btn {
+            opacity: 1;
+        }
+
+        .copy-btn:hover {
+            background: rgba(79, 139, 255, 0.25);
+        }
+
+        .copy-btn.copied {
+            background: rgba(0, 229, 160, 0.2);
+            border-color: rgba(0, 229, 160, 0.4);
+            color: var(--accent-green);
+        }
+
+        /* ── COLOR THEMES PER CATEGORY ── */
+        .cat-auth .section-icon {
+            background: rgba(79, 139, 255, 0.15);
+            color: var(--accent-primary);
+        }
+
+        .cat-auth .cmd-badge {
+            background: rgba(79, 139, 255, 0.12);
+            color: var(--accent-primary);
+            border: 1px solid rgba(79, 139, 255, 0.2);
+        }
+
+        .cat-repo .section-icon {
+            background: rgba(124, 92, 255, 0.15);
+            color: var(--accent-secondary);
+        }
+
+        .cat-repo .cmd-badge {
+            background: rgba(124, 92, 255, 0.12);
+            color: var(--accent-secondary);
+            border: 1px solid rgba(124, 92, 255, 0.2);
+        }
+
+        .cat-pr .section-icon {
+            background: rgba(0, 212, 255, 0.12);
+            color: var(--accent-cyan);
+        }
+
+        .cat-pr .cmd-badge {
+            background: rgba(0, 212, 255, 0.08);
+            color: var(--accent-cyan);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+        }
+
+        .cat-issue .section-icon {
+            background: rgba(255, 77, 109, 0.12);
+            color: var(--accent-red);
+        }
+
+        .cat-issue .cmd-badge {
+            background: rgba(255, 77, 109, 0.08);
+            color: var(--accent-red);
+            border: 1px solid rgba(255, 77, 109, 0.2);
+        }
+
+        .cat-workflow .section-icon {
+            background: rgba(0, 229, 160, 0.12);
+            color: var(--accent-green);
+        }
+
+        .cat-workflow .cmd-badge {
+            background: rgba(0, 229, 160, 0.08);
+            color: var(--accent-green);
+            border: 1px solid rgba(0, 229, 160, 0.2);
+        }
+
+        .cat-release .section-icon {
+            background: rgba(255, 140, 66, 0.12);
+            color: var(--accent-orange);
+        }
+
+        .cat-release .cmd-badge {
+            background: rgba(255, 140, 66, 0.08);
+            color: var(--accent-orange);
+            border: 1px solid rgba(255, 140, 66, 0.2);
+        }
+
+        .cat-gist .section-icon {
+            background: rgba(255, 209, 102, 0.12);
+            color: var(--accent-yellow);
+        }
+
+        .cat-gist .cmd-badge {
+            background: rgba(255, 209, 102, 0.08);
+            color: var(--accent-yellow);
+            border: 1px solid rgba(255, 209, 102, 0.2);
+        }
+
+        .cat-secret .section-icon {
+            background: rgba(255, 77, 109, 0.12);
+            color: #ff6b9d;
+        }
+
+        .cat-secret .cmd-badge {
+            background: rgba(255, 77, 109, 0.08);
+            color: #ff6b9d;
+            border: 1px solid rgba(255, 77, 109, 0.2);
+        }
+
+        .cat-codespace .section-icon {
+            background: rgba(0, 212, 255, 0.12);
+            color: #48cfff;
+        }
+
+        .cat-codespace .cmd-badge {
+            background: rgba(0, 212, 255, 0.08);
+            color: #48cfff;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+        }
+
+        .cat-run .section-icon {
+            background: rgba(0, 229, 160, 0.12);
+            color: #00e5a0;
+        }
+
+        .cat-run .cmd-badge {
+            background: rgba(0, 229, 160, 0.08);
+            color: #00e5a0;
+            border: 1px solid rgba(0, 229, 160, 0.2);
+        }
+
+        .cat-search .section-icon {
+            background: rgba(124, 92, 255, 0.15);
+            color: #a78bfa;
+        }
+
+        .cat-search .cmd-badge {
+            background: rgba(124, 92, 255, 0.1);
+            color: #a78bfa;
+            border: 1px solid rgba(124, 92, 255, 0.2);
+        }
+
+        .cat-misc .section-icon {
+            background: rgba(148, 163, 184, 0.1);
+            color: #94a3b8;
+        }
+
+        .cat-misc .cmd-badge {
+            background: rgba(148, 163, 184, 0.06);
+            color: #94a3b8;
+            border: 1px solid rgba(148, 163, 184, 0.12);
+        }
+
+        /* ── SCROLL TO TOP ── */
+        .scroll-top {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 38px;
+            height: 38px;
+            background: rgba(79, 139, 255, 0.2);
+            border: 1px solid rgba(79, 139, 255, 0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--accent-primary);
+            font-size: 14px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s, background 0.2s;
+            z-index: 50;
+            backdrop-filter: blur(10px);
+        }
+
+        .scroll-top.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .scroll-top:hover {
+            background: rgba(79, 139, 255, 0.35);
+        }
+
+        /* ── ACTIVE HIGHLIGHT ── */
+        .cmd-card.highlight {
+            border-color: rgba(79, 139, 255, 0.5);
+            box-shadow: 0 0 0 1px rgba(79, 139, 255, 0.2), var(--shadow-glow);
+        }
+
+        /* ── MOBILE OVERLAY ── */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 89;
+        }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 900px) {
+            .sidebar {
+                position: fixed;
+                top: var(--topbar-height);
+                bottom: 0;
+                left: 0;
+                z-index: 90;
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay {
+                display: block;
+            }
+
+            .sidebar-overlay.visible {
+                display: block;
+            }
+
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .content {
+                padding: 20px 20px 60px;
+            }
+
+            .topbar-link {
+                display: none;
+            }
+
+            .logo-badge {
+                display: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .palette-kbd {
+                display: none;
+            }
+
+            .hero {
+                padding: 30px 10px 36px;
+            }
+        }
+
+        /* ── SYNTAX HIGHLIGHT ── */
+        .kw {
+            color: var(--accent-primary);
+        }
+
+        .fl {
+            color: var(--accent-yellow);
+        }
+
+        .str {
+            color: var(--accent-green);
+        }
+
+        .cm {
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* ── MISC ── */
+        .divider {
+            height: 1px;
+            background: linear-gradient(to right, transparent, var(--glass-border), transparent);
+            margin: 40px 0;
+        }
+
+        .tag-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 6px;
+        }
+
+        .tag {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            padding: 2px 7px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            color: var(--text-muted);
+        }
+
+        /* palette scrollbar */
+        .palette-dropdown::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .palette-dropdown::-webkit-scrollbar-thumb {
+            background: rgba(79, 139, 255, 0.2);
+            border-radius: 2px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- TOP BAR -->
+    <header class="topbar">
+        <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu">
+            <span></span><span></span><span></span>
+        </button>
+        <div class="logo">
+            <div class="logo-icon">gh</div>
+            <span class="logo-text">GitHub CLI</span>
+            <span class="logo-badge">v2.x</span>
+        </div>
+
+        <div class="palette-wrap">
+            <div class="palette-input-wrap">
+                <span class="palette-icon">⌕</span>
+                <input class="palette-input" id="paletteInput" type="text" placeholder="Search commands… (⌘K)"
+                    autocomplete="off" spellcheck="false">
+                <span class="palette-kbd">⌘K</span>
+            </div>
+            <div class="palette-dropdown" id="paletteDropdown"></div>
+        </div>
+
+        <div class="topbar-right">
+            <a class="topbar-link" href="https://cli.github.com/manual" target="_blank" rel="noopener">↗ Official
+                Docs</a>
+            <a class="topbar-link" href="https://github.com/cli/cli" target="_blank" rel="noopener">GitHub</a>
+        </div>
+    </header>
+
+    <div class="layout">
+        <!-- SIDEBAR OVERLAY -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-search-wrap">
+                <span class="sidebar-search-icon">⊘</span>
+                <input class="sidebar-search" id="sidebarSearch" type="text" placeholder="Filter commands…"
+                    autocomplete="off">
+            </div>
+            <nav class="sidebar-nav" id="sidebarNav">
+                <!-- generated by JS -->
+            </nav>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="content" id="mainContent">
+            <!-- Hero -->
+            <section class="hero">
+                <div class="hero-eyebrow">GitHub CLI — Complete Reference</div>
+                <h1 class="hero-title">gh Cheat Sheet</h1>
+                <p class="hero-sub">Every command, flag, and example from the official GitHub CLI manual. Search,
+                    filter, copy.</p>
+                <div class="hero-stats">
+                    <div class="hero-stat">
+                        <div class="hero-stat-num" id="statCmds">0</div>
+                        <div class="hero-stat-label">Commands</div>
+                    </div>
+                    <div class="hero-stat">
+                        <div class="hero-stat-num">20</div>
+                        <div class="hero-stat-label">Categories</div>
+                    </div>
+                    <div class="hero-stat">
+                        <div class="hero-stat-num" id="statExamples">0</div>
+                        <div class="hero-stat-label">Examples</div>
+                    </div>
+                </div>
+            </section>
+
+            <div id="commandContent"><!-- generated by JS --></div>
+        </main>
+    </div>
+
+    <!-- Scroll to top -->
+    <button class="scroll-top" id="scrollTop" title="Back to top">↑</button>
+
+    <script>
+        // ══════════════════════════════════════════════════════════════
+        // DATA
+        // ══════════════════════════════════════════════════════════════
+        const CATEGORIES = [
+            {
+                id: 'auth', label: 'auth', icon: '🔑', cls: 'cat-auth',
+                desc: 'Authenticate gh and git with GitHub',
+                commands: [
+                    {
+                        id: 'auth-login', name: 'gh auth login', desc: 'Authenticate with a GitHub host.',
+                        syntax: 'gh auth login [flags]',
+                        flags: [
+                            { name: '--hostname, -h <string>', desc: 'The hostname of the GitHub instance to authenticate with' },
+                            { name: '--git-protocol, -p <string>', desc: 'The protocol to use for git operations: ssh or https' },
+                            { name: '--scopes, -s <strings>', desc: 'Additional authentication scopes to request' },
+                            { name: '--with-token', desc: 'Read token from standard input' },
+                            { name: '--web, -w', desc: 'Open a browser to authenticate' },
+                            { name: '--skip-ssh-key', desc: 'Skip generate/upload SSH key prompt' },
+                            { name: '--secure-storage', desc: 'Save credentials in system keyring' },
+                        ],
+                        examples: [
+                            { comment: '# Interactively authenticate', code: 'gh auth login' },
+                            { comment: '# Authenticate via browser', code: 'gh auth login --web' },
+                            { comment: '# Authenticate with a specific hostname', code: 'gh auth login --hostname github.mycompany.com' },
+                            { comment: '# Authenticate using a token from stdin', code: 'echo $GITHUB_TOKEN | gh auth login --with-token' },
+                            { comment: '# Authenticate using SSH protocol', code: 'gh auth login --git-protocol ssh' },
+                        ]
+                    },
+                    {
+                        id: 'auth-logout', name: 'gh auth logout', desc: 'Remove authentication for a GitHub host.',
+                        syntax: 'gh auth logout [flags]',
+                        flags: [
+                            { name: '--hostname, -h <string>', desc: 'The hostname to log out of' },
+                            { name: '--user, -u <string>', desc: 'The account to log out of' },
+                        ],
+                        examples: [
+                            { comment: '# Log out of default host', code: 'gh auth logout' },
+                            { comment: '# Log out of specific host', code: 'gh auth logout --hostname github.mycompany.com' },
+                        ]
+                    },
+                    {
+                        id: 'auth-refresh', name: 'gh auth refresh', desc: 'Refresh stored authentication credentials.',
+                        syntax: 'gh auth refresh [flags]',
+                        flags: [
+                            { name: '--hostname, -h <string>', desc: 'The GitHub host to use' },
+                            { name: '--reset-scopes', desc: 'Reset auth scopes to the default minimum' },
+                            { name: '--scopes, -s <strings>', desc: 'Additional authentication scopes' },
+                            { name: '--secure-storage', desc: 'Save credentials in system keyring' },
+                            { name: '--remove-scopes <strings>', desc: 'Authentication scopes to remove' },
+                        ],
+                        examples: [
+                            { comment: '# Refresh credentials', code: 'gh auth refresh' },
+                            { comment: '# Refresh with additional scopes', code: 'gh auth refresh --scopes write:org,read:public_key' },
+                        ]
+                    },
+                    {
+                        id: 'auth-setup-git', name: 'gh auth setup-git', desc: 'Configure git to use GitHub CLI as a credential helper.',
+                        syntax: 'gh auth setup-git [flags]',
+                        flags: [
+                            { name: '--hostname, -h <string>', desc: 'The hostname to configure git for' },
+                            { name: '--force, -f', desc: 'Force setup even if credential helper is already configured' },
+                        ],
+                        examples: [
+                            { comment: '# Configure git credential helper', code: 'gh auth setup-git' },
+                            { comment: '# Configure for specific host', code: 'gh auth setup-git --hostname github.mycompany.com' },
+                        ]
+                    },
+                    {
+                        id: 'auth-status', name: 'gh auth status', desc: 'View authentication status for all known accounts.',
+                        syntax: 'gh auth status [flags]',
+                        flags: [
+                            { name: '--hostname, -h <string>', desc: 'Check a specific hostname\'s auth status' },
+                            { name: '--active, -a', desc: 'Display the active account only' },
+                            { name: '--show-token, -t', desc: 'Display the auth token' },
+                        ],
+                        examples: [
+                            { comment: '# Check auth status', code: 'gh auth status' },
+                            { comment: '# Show the auth token', code: 'gh auth status --show-token' },
+                        ]
+                    },
+                    {
+                        id: 'auth-switch', name: 'gh auth switch', desc: 'Switch active GitHub account.',
+                        syntax: 'gh auth switch [flags]',
+                        flags: [
+                            { name: '--hostname, -h <string>', desc: 'The hostname of the GitHub instance' },
+                            { name: '--user, -u <string>', desc: 'The account to switch to' },
+                        ],
+                        examples: [
+                            { comment: '# Switch account interactively', code: 'gh auth switch' },
+                            { comment: '# Switch to a specific user', code: 'gh auth switch --user octocat' },
+                        ]
+                    },
+                    {
+                        id: 'auth-token', name: 'gh auth token', desc: 'Print the auth token gh is configured to use.',
+                        syntax: 'gh auth token [flags]',
+                        flags: [
+                            { name: '--hostname, -h <string>', desc: 'Get token for a specific GitHub hostname' },
+                            { name: '--user, -u <string>', desc: 'Get token for a specific user' },
+                            { name: '--secure-storage', desc: 'Retrieve token from the system keyring' },
+                        ],
+                        examples: [
+                            { comment: '# Print the current auth token', code: 'gh auth token' },
+                            { comment: '# Use token in a script', code: 'TOKEN=$(gh auth token)' },
+                        ]
+                    },
+                ]
+            },
+            {
+                id: 'repo', label: 'repo', icon: '📦', cls: 'cat-repo',
+                desc: 'Create, clone, fork, and manage repositories',
+                commands: [
+                    {
+                        id: 'repo-create', name: 'gh repo create', desc: 'Create a new GitHub repository.',
+                        syntax: 'gh repo create [<name>] [flags]',
+                        flags: [
+                            { name: '--public', desc: 'Make the new repository public' },
+                            { name: '--private', desc: 'Make the new repository private' },
+                            { name: '--internal', desc: 'Make the new repository internal' },
+                            { name: '--description, -d <string>', desc: 'Description of the repository' },
+                            { name: '--homepage, -h <URL>', desc: 'A URL with more information about the repository' },
+                            { name: '--push, -p', desc: 'Push local commits to the new repository' },
+                            { name: '--source, -s <string>', desc: 'Path to local repository to use as source' },
+                            { name: '--remote, -r <string>', desc: 'Specify remote name for the new repository' },
+                            { name: '--clone, -c', desc: 'Clone the new repository into the current directory' },
+                            { name: '--template, -t <repository>', desc: 'Make the new repository based on a template' },
+                            { name: '--gitignore, -g <string>', desc: 'Specify a gitignore template for the repository' },
+                            { name: '--license, -l <string>', desc: 'Specify an open source license for the repository' },
+                        ],
+                        examples: [
+                            { comment: '# Create interactively', code: 'gh repo create' },
+                            { comment: '# Create a public repo with a description', code: 'gh repo create my-project --public --description "My awesome project"' },
+                            { comment: '# Create a private repo and clone it', code: 'gh repo create my-project --private --clone' },
+                            { comment: '# Push an existing local repo to GitHub', code: 'gh repo create my-project --source=. --public --push' },
+                            { comment: '# Create from a template', code: 'gh repo create my-site --template octocat/hello-world --public' },
+                        ]
+                    },
+                    {
+                        id: 'repo-clone', name: 'gh repo clone', desc: 'Clone a GitHub repository locally.',
+                        syntax: 'gh repo clone <repository> [<directory>] [-- <gitflags>...]',
+                        flags: [
+                            { name: '--upstream-remote-name <string>', desc: 'Upstream remote name when cloning a fork (default: "upstream")' },
+                            { name: '--', desc: 'Pass additional flags to git clone' },
+                        ],
+                        examples: [
+                            { comment: '# Clone by owner/repo shorthand', code: 'gh repo clone octocat/hello-world' },
+                            { comment: '# Clone into a specific directory', code: 'gh repo clone octocat/hello-world my-local-dir' },
+                            { comment: '# Clone with --depth flag passed to git', code: 'gh repo clone octocat/hello-world -- --depth 1' },
+                        ]
+                    },
+                    {
+                        id: 'repo-fork', name: 'gh repo fork', desc: 'Create a fork of a repository.',
+                        syntax: 'gh repo fork [<repository>] [-- <gitflags>...] [flags]',
+                        flags: [
+                            { name: '--clone', desc: 'Clone the fork' },
+                            { name: '--remote', desc: 'Add a remote for the fork' },
+                            { name: '--remote-name <string>', desc: 'Specify the name for the new remote' },
+                            { name: '--org <string>', desc: 'Create the fork in an organization' },
+                            { name: '--default-branch-only', desc: 'Only include the default branch in the fork' },
+                        ],
+                        examples: [
+                            { comment: '# Fork the current repo', code: 'gh repo fork' },
+                            { comment: '# Fork and clone', code: 'gh repo fork --clone' },
+                            { comment: '# Fork a specific repo into an org', code: 'gh repo fork octocat/hello-world --org my-org' },
+                        ]
+                    },
+                    {
+                        id: 'repo-view', name: 'gh repo view', desc: 'Display repository description and README.',
+                        syntax: 'gh repo view [<repository>] [flags]',
+                        flags: [
+                            { name: '--branch, -b <string>', desc: 'View a specific branch of the repository' },
+                            { name: '--json <fields>', desc: 'Output JSON with the specified fields' },
+                            { name: '--jq, -q <expression>', desc: 'Filter JSON output using a jq expression' },
+                            { name: '--template, -t <string>', desc: 'Format JSON output using a Go template' },
+                            { name: '--web, -w', desc: 'Open repository in the browser' },
+                        ],
+                        examples: [
+                            { comment: '# View current repo', code: 'gh repo view' },
+                            { comment: '# View another repo', code: 'gh repo view octocat/hello-world' },
+                            { comment: '# Open in browser', code: 'gh repo view --web' },
+                            { comment: '# Get repo JSON info', code: 'gh repo view --json name,description,url' },
+                        ]
+                    },
+                    {
+                        id: 'repo-list', name: 'gh repo list', desc: 'List repositories owned by user or organization.',
+                        syntax: 'gh repo list [<owner>] [flags]',
+                        flags: [
+                            { name: '--limit, -L <int>', desc: 'Maximum number of repositories to list (default 30)' },
+                            { name: '--source', desc: 'Show only non-forks' },
+                            { name: '--fork', desc: 'Show only forks' },
+                            { name: '--archived', desc: 'Show only archived repositories' },
+                            { name: '--no-archived', desc: 'Omit archived repositories' },
+                            { name: '--language, -l <string>', desc: 'Filter by primary coding language' },
+                            { name: '--topic <strings>', desc: 'Filter by topic' },
+                            { name: '--visibility <string>', desc: 'Filter by visibility: public, private, or internal' },
+                            { name: '--json <fields>', desc: 'Output JSON with the specified fields' },
+                        ],
+                        examples: [
+                            { comment: '# List your repos', code: 'gh repo list' },
+                            { comment: '# List an org\'s repos', code: 'gh repo list my-org --limit 50' },
+                            { comment: '# List only public repos', code: 'gh repo list --visibility public' },
+                            { comment: '# List repos using a specific language', code: 'gh repo list --language javascript' },
+                        ]
+                    },
+                    {
+                        id: 'repo-edit', name: 'gh repo edit', desc: 'Edit repository settings.',
+                        syntax: 'gh repo edit [<repository>] [flags]',
+                        flags: [
+                            { name: '--description <string>', desc: 'Description of the repository' },
+                            { name: '--homepage <URL>', desc: 'Repository home page URL' },
+                            { name: '--default-branch <name>', desc: 'Set the default branch name' },
+                            { name: '--visibility <string>', desc: 'Change repository visibility: public, private, internal' },
+                            { name: '--enable-issues', desc: 'Enable issues in the repository' },
+                            { name: '--enable-projects', desc: 'Enable projects in the repository' },
+                            { name: '--enable-wiki', desc: 'Enable wiki in the repository' },
+                            { name: '--enable-merge-commit', desc: 'Enable merging pull requests via merge commit' },
+                            { name: '--enable-squash-merge', desc: 'Enable merging pull requests via squash commit' },
+                            { name: '--enable-rebase-merge', desc: 'Enable merging pull requests via rebase' },
+                        ],
+                        examples: [
+                            { comment: '# Edit current repo description', code: 'gh repo edit --description "Better description"' },
+                            { comment: '# Change to private', code: 'gh repo edit --visibility private' },
+                            { comment: '# Set default branch', code: 'gh repo edit --default-branch main' },
+                        ]
+                    },
+                    {
+                        id: 'repo-delete', name: 'gh repo delete', desc: 'Delete a GitHub repository.',
+                        syntax: 'gh repo delete [<repository>] [flags]',
+                        flags: [
+                            { name: '--yes', desc: 'Skip the confirmation prompt' },
+                        ],
+                        examples: [
+                            { comment: '# Delete with confirmation', code: 'gh repo delete my-repo' },
+                            { comment: '# Delete without prompt', code: 'gh repo delete my-repo --yes' },
+                        ]
+                    },
+                    {
+                        id: 'repo-rename', name: 'gh repo rename', desc: 'Rename a GitHub repository.',
+                        syntax: 'gh repo rename [<new-name>] [flags]',
+                        flags: [
+                            { name: '--repo, -R <string>', desc: 'Select another repository using the [HOST/]OWNER/REPO format' },
+                            { name: '--yes, -y', desc: 'Skip the confirmation prompt' },
+                        ],
+                        examples: [
+                            { comment: '# Rename current repo', code: 'gh repo rename new-name' },
+                            { comment: '# Rename a specific repo', code: 'gh repo rename new-name --repo owner/old-name' },
+                        ]
+                    },
+                    {
+                        id: 'repo-archive', name: 'gh repo archive', desc: 'Archive a GitHub repository.',
+                        syntax: 'gh repo archive [<repository>] [flags]',
+                        flags: [{ name: '--yes, -y', desc: 'Skip the confirmation prompt' }],
+                        examples: [
+                            { comment: '# Archive current repo', code: 'gh repo archive' },
+                            { comment: '# Archive without prompt', code: 'gh repo archive owner/repo --yes' },
+                        ]
+                    },
+                    {
+                        id: 'repo-sync', name: 'gh repo sync', desc: 'Sync a repository branch from a remote source.',
+                        syntax: 'gh repo sync [<destination-repository>] [flags]',
+                        flags: [
+                            { name: '--source, -s <string>', desc: 'Source repository to sync from' },
+                            { name: '--branch, -b <string>', desc: 'Branch to sync (default: main branch)' },
+                            { name: '--force', desc: 'Hard reset the branch of the destination repo and sync' },
+                        ],
+                        examples: [
+                            { comment: '# Sync local fork with upstream', code: 'gh repo sync' },
+                            { comment: '# Sync a specific branch', code: 'gh repo sync --branch develop' },
+                            { comment: '# Force sync (overwrites diverged history)', code: 'gh repo sync --force' },
+                        ]
+                    },
+                    {
+                        id: 'repo-set-default', name: 'gh repo set-default', desc: 'Configure default repository for this directory.',
+                        syntax: 'gh repo set-default [<repository>] [flags]',
+                        flags: [
+                            { name: '--unset, -u', desc: 'Unset the current default repository' },
+                            { name: '--view, -v', desc: 'View the current default repository' },
+                        ],
+                        examples: [
+                            { comment: '# Set default repo interactively', code: 'gh repo set-default' },
+                            { comment: '# Set specific repo as default', code: 'gh repo set-default owner/repo' },
+                            { comment: '# View current default', code: 'gh repo set-default --view' },
+                        ]
+                    },
+                ]
+            },
+            {
+                id: 'pr', label: 'pr', icon: '🔀', cls: 'cat-pr',
+                desc: 'Manage pull requests',
+                commands: [
+                    {
+                        id: 'pr-create', name: 'gh pr create', desc: 'Create a pull request.',
+                        syntax: 'gh pr create [flags]',
+                        flags: [
+                            { name: '--title, -t <string>', desc: 'Title for the pull request' },
+                            { name: '--body, -b <string>', desc: 'Body for the pull request' },
+                            { name: '--base, -B <branch>', desc: 'The branch into which you want your code merged' },
+                            { name: '--head, -H <branch>', desc: 'The branch that contains commits for your PR' },
+                            { name: '--draft, -d', desc: 'Mark the pull request as a draft' },
+                            { name: '--fill', desc: 'Do not prompt for title/body and just use commit info' },
+                            { name: '--fill-first', desc: 'Use first commit info to fill title and body' },
+                            { name: '--assignee, -a <login>', desc: 'Assign people by their login' },
+                            { name: '--label, -l <name>', desc: 'Add labels by name' },
+                            { name: '--milestone, -m <name>', desc: 'Add the pull request to a milestone by name' },
+                            { name: '--reviewer, -r <handle>', desc: 'Request reviews from people or teams by handle' },
+                            { name: '--web, -w', desc: 'Open the web browser to create a pull request' },
+                        ],
+                        examples: [
+                            { comment: '# Create interactively', code: 'gh pr create' },
+                            { comment: '# Create a draft PR', code: 'gh pr create --draft --title "WIP: my feature"' },
+                            { comment: '# Create targeting a specific base branch', code: 'gh pr create --base develop --fill' },
+                            { comment: '# Create with reviewer and label', code: 'gh pr create --reviewer octocat --label "bug"' },
+                            { comment: '# Open browser to create PR', code: 'gh pr create --web' },
+                        ]
+                    },
+                    {
+                        id: 'pr-list', name: 'gh pr list', desc: 'List pull requests in a GitHub repository.',
+                        syntax: 'gh pr list [flags]',
+                        flags: [
+                            { name: '--limit, -L <int>', desc: 'Maximum number of items to fetch (default 30)' },
+                            { name: '--state, -s <string>', desc: 'Filter by state: open, closed, merged, or all' },
+                            { name: '--base, -b <string>', desc: 'Filter by base branch' },
+                            { name: '--head, -H <string>', desc: 'Filter by head user or head branch' },
+                            { name: '--label, -l <strings>', desc: 'Filter by label' },
+                            { name: '--assignee, -a <string>', desc: 'Filter by assignee' },
+                            { name: '--author, -A <string>', desc: 'Filter by author' },
+                            { name: '--draft', desc: 'Filter by draft state' },
+                            { name: '--json <fields>', desc: 'Output JSON with the specified fields' },
+                            { name: '--web, -w', desc: 'Open the browser to list pull requests' },
+                        ],
+                        examples: [
+                            { comment: '# List open PRs', code: 'gh pr list' },
+                            { comment: '# List closed PRs', code: 'gh pr list --state closed' },
+                            { comment: '# List PRs by label', code: 'gh pr list --label bug --label critical' },
+                            { comment: '# List drafts', code: 'gh pr list --draft' },
+                            { comment: '# Get PR list as JSON', code: 'gh pr list --json number,title,headRefName' },
+                        ]
+                    },
+                    {
+                        id: 'pr-view', name: 'gh pr view', desc: 'Display the title, body, and other information about a pull request.',
+                        syntax: 'gh pr view [<number> | <url> | <branch>] [flags]',
+                        flags: [
+                            { name: '--json <fields>', desc: 'Output JSON with the specified fields' },
+                            { name: '--web, -w', desc: 'Open a pull request in the browser' },
+                            { name: '--comments, -c', desc: 'View pull request comments' },
+                        ],
+                        examples: [
+                            { comment: '# View current branch\'s PR', code: 'gh pr view' },
+                            { comment: '# View specific PR', code: 'gh pr view 123' },
+                            { comment: '# Open PR in browser', code: 'gh pr view --web' },
+                            { comment: '# View PR with comments', code: 'gh pr view 123 --comments' },
+                        ]
+                    },
+                    {
+                        id: 'pr-checkout', name: 'gh pr checkout', desc: 'Check out a pull request in git.',
+                        syntax: 'gh pr checkout {<number> | <url> | <branch>} [flags]',
+                        flags: [
+                            { name: '--detach', desc: 'Checkout PR with a detached HEAD' },
+                            { name: '--branch, -b <string>', desc: 'Local branch name to use (default: head branch name)' },
+                            { name: '--force, -f', desc: 'Reset the existing local branch to the latest state of the pull request' },
+                            { name: '--recurse-submodules', desc: 'Update all submodules after checkout' },
+                        ],
+                        examples: [
+                            { comment: '# Checkout PR by number', code: 'gh pr checkout 123' },
+                            { comment: '# Checkout with a custom local branch name', code: 'gh pr checkout 123 --branch my-local-branch' },
+                            { comment: '# Force reset existing branch', code: 'gh pr checkout 123 --force' },
+                        ]
+                    },
+                    {
+                        id: 'pr-merge', name: 'gh pr merge', desc: 'Merge a pull request.',
+                        syntax: 'gh pr merge [<number> | <url> | <branch>] [flags]',
+                        flags: [
+                            { name: '--merge, -m', desc: 'Merge the commits with the base branch' },
+                            { name: '--squash, -s', desc: 'Squash the commits into one commit and merge into the base branch' },
+                            { name: '--rebase, -r', desc: 'Rebase the commits onto the base branch' },
+                            { name: '--delete-branch, -d', desc: 'Delete the local and remote branch after merge' },
+                            { name: '--body, -b <text>', desc: 'Body text for the merge commit' },
+                            { name: '--subject, -t <text>', desc: 'Subject text for the merge commit' },
+                            { name: '--auto', desc: 'Automatically merge when all requirements are met' },
+                            { name: '--disable-auto', desc: 'Disable auto-merge for this pull request' },
+                            { name: '--admin', desc: 'Use administrator privileges to merge a pull request that does not meet requirements' },
+                        ],
+                        examples: [
+                            { comment: '# Merge interactively', code: 'gh pr merge' },
+                            { comment: '# Squash and merge, delete branch', code: 'gh pr merge --squash --delete-branch' },
+                            { comment: '# Auto-merge when checks pass', code: 'gh pr merge 123 --auto --rebase' },
+                            { comment: '# Merge specific PR', code: 'gh pr merge 456 --merge' },
+                        ]
+                    },
+                    {
+                        id: 'pr-review', name: 'gh pr review', desc: 'Add a review to a pull request.',
+                        syntax: 'gh pr review [<number> | <url> | <branch>] [flags]',
+                        flags: [
+                            { name: '--approve, -a', desc: 'Approve pull request' },
+                            { name: '--request-changes, -r', desc: 'Request changes on a pull request' },
+                            { name: '--comment, -c', desc: 'Comment on a pull request without approving or requesting changes' },
+                            { name: '--body, -b <text>', desc: 'Specify the body of a review' },
+                            { name: '--body-file, -F <file>', desc: 'Read body text from file (use "-" to read from standard input)' },
+                        ],
+                        examples: [
+                            { comment: '# Approve a PR', code: 'gh pr review 123 --approve' },
+                            { comment: '# Request changes with a comment', code: 'gh pr review 123 --request-changes --body "Please fix the tests"' },
+                            { comment: '# Leave a comment', code: 'gh pr review --comment --body "LGTM overall"' },
+                        ]
+                    },
+                    {
+                        id: 'pr-checks', name: 'gh pr checks', desc: 'Show CI status for a single pull request.',
+                        syntax: 'gh pr checks [<number> | <url> | <branch>] [flags]',
+                        flags: [
+                            { name: '--watch', desc: 'Watch checks until they finish' },
+                            { name: '--fail-fast', desc: 'Return exit status 1 if any check fails' },
+                            { name: '--interval, -i <float>', desc: 'Refresh interval in seconds when using --watch (default: 10)' },
+                            { name: '--required', desc: 'Only show checks that are required' },
+                            { name: '--json <fields>', desc: 'Output JSON with the specified fields' },
+                        ],
+                        examples: [
+                            { comment: '# Check CI status', code: 'gh pr checks' },
+                            { comment: '# Watch until checks complete', code: 'gh pr checks --watch' },
+                            { comment: '# Check required checks only', code: 'gh pr checks --required' },
+                        ]
+                    },
+                    {
+                        id: 'pr-diff', name: 'gh pr diff', desc: 'View changes in a pull request.',
+                        syntax: 'gh pr diff [<number> | <url> | <branch>] [flags]',
+                        flags: [
+                            { name: '--color <string>', desc: 'Use color in diff output: always, never, or auto (default: auto)' },
+                            { name: '--patch', desc: 'Display diff in patch format' },
+                            { name: '--name-only', desc: 'Display only names of changed files' },
+                        ],
+                        examples: [
+                            { comment: '# Show current PR diff', code: 'gh pr diff' },
+                            { comment: '# Show diff for a specific PR', code: 'gh pr diff 123' },
+                            { comment: '# Show only changed filenames', code: 'gh pr diff --name-only' },
+                        ]
+                    },
+                    {
+                        id: 'pr-comment', name: 'gh pr comment', desc: 'Create a new pr comment.',
+                        syntax: 'gh pr comment [<number> | <url> | <branch>] [flags]',
+                        flags: [
+                            { name: '--body, -b <text>', desc: 'The comment body text' },
+                            { name: '--body-file, -F <file>', desc: 'Read body text from file (use "-" to read from stdin)' },
+                            { name: '--edit-last', desc: 'Edit the last comment of the same author' },
+                        ],
+                        examples: [
+                            { comment: '# Comment on current PR', code: 'gh pr comment --body "Looks good!"' },
+                            { comment: '# Comment on a specific PR', code: 'gh pr comment 123 --body "Please add tests"' },
+                        ]
+                    },
+                    {
+                        id: 'pr-edit', name: 'gh pr edit', desc: 'Edit a pull request.',
+                        syntax: 'gh pr edit [<number> | <url> | <branch>] [flags]',
+                        flags: [
+                            { name: '--title, -t <string>', desc: 'Set the new title' },
+                            { name: '--body, -b <string>', desc: 'Set the new body' },
+                            { name: '--base, -B <string>', desc: 'Change the base branch for this pull request' },
+                            { name: '--add-label <name>', desc: 'Add labels by name' },
+                            { name: '--remove-label <name>', desc: 'Remove labels by name' },
+                            { name: '--add-assignee <login>', desc: 'Add assigned users by login' },
+                            { name: '--remove-assignee <login>', desc: 'Remove assigned users by login' },
+                            { name: '--add-reviewer <login>', desc: 'Add reviewers by GitHub login' },
+                            { name: '--remove-reviewer <login>', desc: 'Remove reviewers by GitHub login' },
+                            { name: '--milestone <name>', desc: 'Edit the milestone the pull request belongs to by name' },
+                        ],
+                        examples: [
+                            { comment: '# Edit PR title', code: 'gh pr edit --title "Fix: resolve memory leak"' },
+                            { comment: '# Add a label', code: 'gh pr edit --add-label bug' },
+                            { comment: '# Change base branch', code: 'gh pr edit --base develop' },
+                        ]
+                    },
+                    {
+                        id: 'pr-close', name: 'gh pr close', desc: 'Close a pull request.',
+                        syntax: 'gh pr close {<number> | <url> | <branch>} [flags]',
+                        flags: [
+                            { name: '--comment, -c <string>', desc: 'Leave a closing comment' },
+                            { name: '--delete-branch, -d', desc: 'Delete the local and remote branch after close' },
+                        ],
+                        examples: [
+                            { comment: '# Close a PR', code: 'gh pr close 123' },
+                            { comment: '# Close with a comment and delete branch', code: 'gh pr close 123 --comment "No longer needed" --delete-branch' },
+                        ]
+                    },
+                    {
+                        id: 'pr-reopen', name: 'gh pr reopen', desc: 'Reopen a pull request.',
+                        syntax: 'gh pr reopen {<number> | <url> | <branch>} [flags]',
+                        flags: [{ name: '--comment, -c <string>', desc: 'Leave a comment when reopening' }],
+                        examples: [
+                            { comment: '# Reopen a PR', code: 'gh pr reopen 123' },
+                        ]
+                    },
+                    {
+                        id: 'pr-status', name: 'gh pr status', desc: 'Show status of relevant pull requests.',
+                        syntax: 'gh pr status [flags]',
+                        flags: [
+                            { name: '--conflict-status', desc: 'Display the merge conflict status of each pull request' },
+                            { name: '--json <fields>', desc: 'Output JSON with the specified fields' },
+                        ],
+                        examples: [
+                            { comment: '# Show PR status overview', code: 'gh pr status' },
+                            { comment: '# Show with conflict status', code: 'gh pr status --conflict-status' },
+                        ]
+                    },
+                    {
+                        id: 'pr-ready', name: 'gh pr ready', desc: 'Mark a pull request as ready for review.',
+                        syntax: 'gh pr ready [<number> | <url> | <branch>] [flags]',
+                        flags: [{ name: '--undo', desc: 'Convert a pull request to a draft' }],
+                        examples: [
+                            { comment: '# Mark as ready', code: 'gh pr ready 123' },
+                            { comment: '# Convert back to draft', code: 'gh pr ready 123 --undo' },
+                        ]
+                    },
+                    {
+                        id: 'pr-update-branch', name: 'gh pr update-branch', desc: 'Update a pull request branch.',
+                        syntax: 'gh pr update-branch [<number> | <url> | <branch>] [flags]',
+                        flags: [
+                            { name: '--rebase, -r', desc: 'Update PR branch by rebasing on top of base branch' },
+                        ],
+                        examples: [
+                            { comment: '# Update branch (merge)', code: 'gh pr update-branch 123' },
+                            { comment: '# Update branch by rebasing', code: 'gh pr update-branch 123 --rebase' },
+                        ]
+                    },
+                ]
+            },
+            {
+                id: 'issue', label: 'issue', icon: '🐛', cls: 'cat-issue',
+                desc: 'Manage GitHub Issues',
+                commands: [
+                    {
+                        id: 'issue-create', name: 'gh issue create', desc: 'Create a new issue.',
+                        syntax: 'gh issue create [flags]',
+                        flags: [
+                            { name: '--title, -t <string>', desc: 'Supply a title' },
+                            { name: '--body, -b <string>', desc: 'Supply a body' },
+                            { name: '--body-file, -F <file>', desc: 'Read body text from file' },
+                            { name: '--assignee, -a <login>', desc: 'Assign people by their login' },
+                            { name: '--label, -l <name>', desc: 'Add labels by name' },
+                            { name: '--milestone, -m <name>', desc: 'Add the issue to a milestone by name' },
+                            { name: '--project, -p <name>', desc: 'Add the issue to projects by name' },
+                            { name: '--web, -w', desc: 'Open the browser to create an issue' },
+                        ],
+                        examples: [
+                            { comment: '# Create interactively', code: 'gh issue create' },
+                            { comment: '# Create with title and body', code: 'gh issue create --title "Bug report" --body "Steps to reproduce..."' },
+                            { comment: '# Create and assign', code: 'gh issue create --title "Fix login" --assignee octocat --label bug' },
+                            { comment: '# Open browser to create', code: 'gh issue create --web' },
+                        ]
+                    },
+                    {
+                        id: 'issue-list', name: 'gh issue list', desc: 'List issues in a GitHub repository.',
+                        syntax: 'gh issue list [flags]',
+                        flags: [
+                            { name: '--limit, -L <int>', desc: 'Maximum number of issues to fetch (default 30)' },
+                            { name: '--state, -s <string>', desc: 'Filter by state: open, closed, or all' },
+                            { name: '--label, -l <strings>', desc: 'Filter by label' },
+                            { name: '--assignee, -a <string>', desc: 'Filter by assignee' },
+                            { name: '--author, -A <string>', desc: 'Filter by author' },
+                            { name: '--milestone <string>', desc: 'Filter by milestone title' },
+                            { name: '--mention <string>', desc: 'Filter by mention' },
+                            { name: '--json <fields>', desc: 'Output JSON with specified fields' },
+                            { name: '--web, -w', desc: 'Open the browser to list issues' },
+                        ],
+                        examples: [
+                            { comment: '# List open issues', code: 'gh issue list' },
+                            { comment: '# List all issues, including closed', code: 'gh issue list --state all' },
+                            { comment: '# Filter by label', code: 'gh issue list --label bug --label "good first issue"' },
+                            { comment: '# Get as JSON', code: 'gh issue list --json number,title,labels --limit 10' },
+                        ]
+                    },
+                    {
+                        id: 'issue-view', name: 'gh issue view', desc: 'Display the title, body, and other information about an issue.',
+                        syntax: 'gh issue view {<number> | <url>} [flags]',
+                        flags: [
+                            { name: '--comments, -c', desc: 'View issue comments' },
+                            { name: '--json <fields>', desc: 'Output JSON with the specified fields' },
+                            { name: '--web, -w', desc: 'Open an issue in the browser' },
+                        ],
+                        examples: [
+                            { comment: '# View issue #42', code: 'gh issue view 42' },
+                            { comment: '# View with comments', code: 'gh issue view 42 --comments' },
+                            { comment: '# Open in browser', code: 'gh issue view 42 --web' },
+                        ]
+                    },
+                    {
+                        id: 'issue-edit', name: 'gh issue edit', desc: 'Edit an issue.',
+                        syntax: 'gh issue edit {<numbers> | <urls>} [flags]',
+                        flags: [
+                            { name: '--title, -t <string>', desc: 'Set the new title' },
+                            { name: '--body, -b <string>', desc: 'Set the new body' },
+                            { name: '--add-label <name>', desc: 'Add labels by name' },
+                            { name: '--remove-label <name>', desc: 'Remove labels by name' },
+                            { name: '--add-assignee <login>', desc: 'Add assigned users by login' },
+                            { name: '--remove-assignee <login>', desc: 'Remove assigned users by login' },
+                            { name: '--milestone <name>', desc: 'Edit the milestone the issue belongs to by name' },
+                        ],
+                        examples: [
+                            { comment: '# Change issue title', code: 'gh issue edit 42 --title "Updated title"' },
+                            { comment: '# Add a label', code: 'gh issue edit 42 --add-label enhancement' },
+                            { comment: '# Assign to a user', code: 'gh issue edit 42 --add-assignee octocat' },
+                        ]
+                    },
+                    {
+                        id: 'issue-close', name: 'gh issue close', desc: 'Close an issue.',
+                        syntax: 'gh issue close {<numbers> | <urls>} [flags]',
+                        flags: [
+                            { name: '--comment, -c <string>', desc: 'Leave a closing comment' },
+                            { name: '--reason, -r <string>', desc: 'Reason to close: completed or not planned' },
+                        ],
+                        examples: [
+                            { comment: '# Close an issue', code: 'gh issue close 42' },
+                            { comment: '# Close as not planned', code: 'gh issue close 42 --reason "not planned"' },
+                            { comment: '# Close with a comment', code: 'gh issue close 42 --comment "Fixed in PR #50"' },
+                        ]
+                    },
+                    {
+                        id: 'issue-reopen', name: 'gh issue reopen', desc: 'Reopen an issue.',
+                        syntax: 'gh issue reopen {<numbers> | <urls>} [flags]',
+                        flags: [{ name: '--comment, -c <string>', desc: 'Leave a comment when reopening' }],
+                        examples: [
+                            { comment: '# Reopen issue #42', code: 'gh issue reopen 42' },
+                        ]
+                    },
+                    {
+                        id: 'issue-comment', name: 'gh issue comment', desc: 'Create a new issue comment.',
+                        syntax: 'gh issue comment {<number> | <url>} [flags]',
+                        flags: [
+                            { name: '--body, -b <text>', desc: 'The comment body text' },
+                            { name: '--body-file, -F <file>', desc: 'Read body text from file' },
+                            { name: '--edit-last', desc: 'Edit the last comment of the same author' },
+                        ],
+                        examples: [
+                            { comment: '# Add a comment', code: 'gh issue comment 42 --body "I can reproduce this on macOS"' },
+                        ]
+                    },
+                    {
+                        id: 'issue-delete', name: 'gh issue delete', desc: 'Delete an issue.',
+                        syntax: 'gh issue delete {<numbers> | <urls>} [flags]',
+                        flags: [{ name: '--yes', desc: 'Skip the confirmation prompt' }],
+                        examples: [
+                            { comment: '# Delete with confirmation', code: 'gh issue delete 42' },
+                            { comment: '# Delete without prompt', code: 'gh issue delete 42 --yes' },
+                        ]
+                    },
+                    {
+                        id: 'issue-status', name: 'gh issue status', desc: 'Show status of relevant issues.',
+                        syntax: 'gh issue status [flags]',
+                        flags: [{ name: '--json <fields>', desc: 'Output JSON with the specified fields' }],
+                        examples: [
+                            { comment: '# Show issue status', code: 'gh issue status' },
+                        ]
+                    },
+                    {
+                        id: 'issue-develop', name: 'gh issue develop', desc: 'Manage linked branches for an issue.',
+                        syntax: 'gh issue develop {<number> | <url>} [flags]',
+                        flags: [
+                            { name: '--list, -l', desc: 'List branches for issue' },
+                            { name: '--checkout, -c', desc: 'Checkout the branch after creating it' },
+                            { name: '--name, -n <string>', desc: 'Name of the branch to create' },
+                            { name: '--base-branch <string>', desc: 'Name of the remote branch to use as base' },
+                            { name: '--issue-repo <string>', desc: 'Name or URL of the issue\'s repository' },
+                        ],
+                        examples: [
+                            { comment: '# Create a branch for issue 42', code: 'gh issue develop 42 --checkout' },
+                            { comment: '# List linked branches', code: 'gh issue develop 42 --list' },
+                            { comment: '# Create with custom name', code: 'gh issue develop 42 --name fix-login-bug' },
+                        ]
+                    },
+                    {
+                        id: 'issue-pin', name: 'gh issue pin', desc: 'Pin an issue to a repository.',
+                        syntax: 'gh issue pin {<number> | <url>}',
+                        flags: [],
+                        examples: [
+                            { comment: '# Pin an issue', code: 'gh issue pin 42' },
+                        ]
+                    },
+                    {
+                        id: 'issue-unpin', name: 'gh issue unpin', desc: 'Unpin a pinned issue from a repository.',
+                        syntax: 'gh issue unpin {<number> | <url>}',
+                        flags: [],
+                        examples: [
+                            { comment: '# Unpin an issue', code: 'gh issue unpin 42' },
+                        ]
+                    },
+                    {
+                        id: 'issue-transfer', name: 'gh issue transfer', desc: 'Transfer an issue to another repository.',
+                        syntax: 'gh issue transfer {<number> | <url>} <destination-repo>',
+                        flags: [],
+                        examples: [
+                            { comment: '# Transfer issue to another repo', code: 'gh issue transfer 42 owner/other-repo' },
+                        ]
+                    },
+                    {
+                        id: 'issue-lock', name: 'gh issue lock', desc: 'Lock issue conversation.',
+                        syntax: 'gh issue lock {<number> | <url>} [flags]',
+                        flags: [{ name: '--reason, -r <string>', desc: 'Optional reason: off_topic, resolved, spam, too_heated' }],
+                        examples: [
+                            { comment: '# Lock a resolved issue', code: 'gh issue lock 42 --reason resolved' },
+                        ]
+                    },
+                    {
+                        id: 'issue-unlock', name: 'gh issue unlock', desc: 'Unlock issue conversation.',
+                        syntax: 'gh issue unlock {<number> | <url>}',
+                        flags: [],
+                        examples: [
+                            { comment: '# Unlock conversation', code: 'gh issue unlock 42' },
+                        ]
+                    },
+                ]
+            },
+            {
+                id: 'workflow', label: 'workflow', icon: '⚙️', cls: 'cat-workflow',
+                desc: 'Manage GitHub Actions workflows',
+                commands: [
+                    {
+                        id: 'workflow-list', name: 'gh workflow list', desc: 'List workflows in a GitHub repository.',
+                        syntax: 'gh workflow list [flags]',
+                        flags: [
+                            { name: '--all, -a', desc: 'Also show disabled workflows' },
+                            { name: '--limit, -L <int>', desc: 'Maximum number of workflows to fetch (default 50)' },
+                            { name: '--json <fields>', desc: 'Output JSON with the specified fields' },
+                        ],
+                        examples: [
+                            { comment: '# List all workflows', code: 'gh workflow list' },
+                            { comment: '# Include disabled', code: 'gh workflow list --all' },
+                        ]
+                    },
+                    {
+                        id: 'workflow-run', name: 'gh workflow run', desc: 'Run a workflow by creating a workflow_dispatch event.',
+                        syntax: 'gh workflow run [<workflow-id> | <workflow-name>] [flags]',
+                        flags: [
+                            { name: '--field, -F <key=value>', desc: 'Add a string parameter in key=value format, respecting @ syntax' },
+                            { name: '--raw-field, -f <key=value>', desc: 'Add a string parameter in key=value format' },
+                            { name: '--json', desc: 'Read workflow inputs as JSON via STDIN' },
+                            { name: '--ref, -r <string>', desc: 'The branch or tag name which contains the workflow file' },
+                        ],
+                        examples: [
+                            { comment: '# Run workflow interactively', code: 'gh workflow run' },
+                            { comment: '# Run specific workflow', code: 'gh workflow run deploy.yml' },
+                            { comment: '# Run with inputs', code: 'gh workflow run deploy.yml --field environment=production' },
+                            { comment: '# Run on a specific branch', code: 'gh workflow run ci.yml --ref feature-branch' },
+                        ]
+                    },
+                    {
+                        id: 'workflow-view', name: 'gh workflow view', desc: 'View the summary of a workflow.',
+                        syntax: 'gh workflow view [<workflow-id> | <workflow-name> | <filename>] [flags]',
+                        flags: [
+                            { name: '--ref, -r <string>', desc: 'The branch or tag name which contains the workflow file' },
+                            { name: '--web, -w', desc: 'Open workflow in the browser' },
+                            { name: '--yaml, -y', desc: 'View the workflow yaml file' },
+                        ],
+                        examples: [
+                            { comment: '# View a workflow', code: 'gh workflow view ci.yml' },
+                            { comment: '# View YAML source', code: 'gh workflow view ci.yml --yaml' },
+                            { comment: '# Open in browser', code: 'gh workflow view ci.yml --web' },
+                        ]
+                    },
+                    {
+                        id: 'workflow-enable', name: 'gh workflow enable', desc: 'Enable a workflow.',
+                        syntax: 'gh workflow enable [<workflow-id> | <workflow-name>]',
+                        flags: [],
+                        examples: [
+                            { comment: '# Enable by filename', code: 'gh workflow enable ci.yml' },
+                            { comment: '# Enable by name', code: 'gh workflow enable "CI"' },
+                        ]
+                    },
+                    {
+                        id: 'workflow-disable', name: 'gh workflow disable', desc: 'Disable a workflow.',
+                        syntax: 'gh workflow disable [<workflow-id> | <workflow-name>]',
+                        flags: [],
+                        examples: [
+                            { comment: '# Disable a workflow', code: 'gh workflow disable ci.yml' },
+                        ]
+                    },
+                ]
+            },
+            {
+                id: 'run', label: 'run', icon: '▶', cls: 'cat-run',
+                desc: 'View and manage GitHub Actions runs',
+                commands: [
+                    {
+                        id: 'run-list', name: 'gh run list', desc: 'List recent workflow runs.',
+                        syntax: 'gh run list [flags]',
+                        flags: [
+                            { name: '--limit, -L <int>', desc: 'Maximum number of runs to fetch (default 20)' },
+                            { name: '--workflow, -w <string>', desc: 'Filter runs by workflow' },
+                            { name: '--branch, -b <string>', desc: 'Filter runs by branch' },
+                            { name: '--status, -s <string>', desc: 'Filter runs by status: queued, in_progress, completed, etc.' },
+                            { name: '--event, -e <string>', desc: 'Filter runs by which event triggered the run' },
+                            { name: '--commit <sha>', desc: 'Filter runs by the SHA of the commit' },
+                            { name: '--json <fields>', desc: 'Output JSON with the specified fields' },
+                        ],
+                        examples: [
+                            { comment: '# List recent runs', code: 'gh run list' },
+                            { comment: '# Filter by workflow', code: 'gh run list --workflow ci.yml' },
+                            { comment: '# Show only failed runs', code: 'gh run list --status failure' },
+                            { comment: '# Runs on a specific branch', code: 'gh run list --branch main' },
+                        ]
+                    },
+                    {
+                        id: 'run-view', name: 'gh run view', desc: 'View a summary of a workflow run.',
+                        syntax: 'gh run view [<run-id>] [flags]',
+                        flags: [
+                            { name: '--exit-status', desc: 'Exit with non-zero status if run failed' },
+                            { name: '--job, -j <string>', desc: 'View a specific job ID from a run' },
+                            { name: '--log', desc: 'View full log for either a run or specific job' },
+                            { name: '--log-failed', desc: 'View the log for any failed steps in a run or specific job' },
+                            { name: '--verbose, -v', desc: 'Show job steps' },
+                            { name: '--web, -w', desc: 'Open run in the browser' },
+                            { name: '--json <fields>', desc: 'Output JSON with the specified fields' },
+                        ],
+                        examples: [
+                            { comment: '# View latest run', code: 'gh run view' },
+                            { comment: '# View specific run with steps', code: 'gh run view 1234567890 --verbose' },
+                            { comment: '# View logs of failed steps', code: 'gh run view 1234567890 --log-failed' },
+                            { comment: '# Open run in browser', code: 'gh run view --web' },
+                        ]
+                    },
+                    {
+                        id: 'run-watch', name: 'gh run watch', desc: 'Watch a run until it completes, showing its progress.',
+                        syntax: 'gh run watch [<run-id>] [flags]',
+                        flags: [
+                            { name: '--exit-status', desc: 'Exit with non-zero status if run failed' },
+                            { name: '--interval, -i <int>', desc: 'Refresh interval in seconds (default 3)' },
+                        ],
+                        examples: [
+                            { comment: '# Watch latest run', code: 'gh run watch' },
+                            { comment: '# Watch and fail if run fails', code: 'gh run watch --exit-status' },
+                        ]
+                    },
+                    {
+                        id: 'run-rerun', name: 'gh run rerun', desc: 'Rerun an entire run or its failed jobs.',
+                        syntax: 'gh run rerun [<run-id>] [flags]',
+                        flags: [
+                            { name: '--failed', desc: 'Rerun only failed jobs, including their dependencies' },
+                            { name: '--job, -j <string>', desc: 'Rerun a specific job ID from a run' },
+                            { name: '--debug, -d', desc: 'Rerun with debug logging' },
+                        ],
+                        examples: [
+                            { comment: '# Rerun latest run', code: 'gh run rerun' },
+                            { comment: '# Rerun only failed jobs', code: 'gh run rerun --failed' },
+                            { comment: '# Rerun with debug logging', code: 'gh run rerun 1234567890 --debug' },
+                        ]
+                    },
+                    {
+                        id: 'run-cancel', name: 'gh run cancel', desc: 'Cancel a workflow run.',
+                        syntax: 'gh run cancel [<run-id>]',
+                        flags: [],
+                        examples: [
+                            { comment: '# Cancel latest run', code: 'gh run cancel' },
+                            { comment: '# Cancel specific run', code: 'gh run cancel 1234567890' },
+                        ]
+                    },
+                    {
+                        id: 'run-download', name: 'gh run download', desc: 'Download artifacts generated by a workflow run.',
+                        syntax: 'gh run download [<run-id>] [flags]',
+                        flags: [
+                            { name: '--dir, -D <path>', desc: 'The directory to download artifacts into (default ".")' },
+                            { name: '--name, -n <string>', desc: 'Only download artifacts that match any of the given names' },
+                            { name: '--pattern, -p <string>', desc: 'Only download artifacts that match a glob pattern' },
+                            { name: '--repo, -R <string>', desc: 'Select another repository' },
+                        ],
+                        examples: [
+                            { comment: '# Download all artifacts from latest run', code: 'gh run download' },
+                            { comment: '# Download specific artifact', code: 'gh run download --name build-artifacts' },
+                            { comment: '# Download to a specific folder', code: 'gh run download --dir ./artifacts' },
+                        ]
+                    },
+                    {
+                        id: 'run-delete', name: 'gh run delete', desc: 'Delete a workflow run.',
+                        syntax: 'gh run delete [<run-id>]',
+                        flags: [],
+                        examples: [
+                            { comment: '# Delete a run', code: 'gh run delete 1234567890' },
+                        ]
+                    },
+                ]
+            },
+            {
+                id: 'release', label: 'release', icon: '🚀', cls: 'cat-release',
+                desc: 'Manage GitHub releases',
+                commands: [
+                    {
+                        id: 'release-create', name: 'gh release create', desc: 'Create a new GitHub release.',
+                        syntax: 'gh release create [<tag>] [<files>...] [flags]',
+                        flags: [
+                            { name: '--title, -t <string>', desc: 'Release title' },
+                            { name: '--notes, -n <string>', desc: 'Release notes' },
+                            { name: '--notes-file, -F <file>', desc: 'Read release notes from file (use "-" for stdin)' },
+                            { name: '--notes-from-tag', desc: 'Automatically generate notes from git tag' },
+                            { name: '--generate-notes', desc: 'Automatically generate title and notes for the release' },
+                            { name: '--draft, -d', desc: 'Save the release as a draft instead of publishing it' },
+                            { name: '--prerelease, -p', desc: 'Mark the release as a prerelease' },
+                            { name: '--target <branch>', desc: 'Target branch or full commit SHA' },
+                            { name: '--discussion-category <string>', desc: 'Start a discussion in the specified category' },
+                            { name: '--latest', desc: 'Mark this release as the latest release' },
+                        ],
+                        examples: [
+                            { comment: '# Create interactively', code: 'gh release create' },
+                            { comment: '# Create a tagged release', code: 'gh release create v1.2.0 --title "v1.2.0" --notes "Bug fixes"' },
+                            { comment: '# Auto-generate notes', code: 'gh release create v1.2.0 --generate-notes' },
+                            { comment: '# Create a draft release with assets', code: 'gh release create v2.0.0 ./build/*.tar.gz --draft' },
+                            { comment: '# Create a prerelease', code: 'gh release create v2.0.0-beta1 --prerelease' },
+                        ]
+                    },
+                    {
+                        id: 'release-list', name: 'gh release list', desc: 'List releases in a GitHub repository.',
+                        syntax: 'gh release list [flags]',
+                        flags: [
+                            { name: '--limit, -L <int>', desc: 'Maximum number of items to fetch (default 30)' },
+                            { name: '--exclude-drafts', desc: 'Exclude draft releases' },
+                            { name: '--exclude-pre-releases', desc: 'Exclude pre-releases' },
+                            { name: '--json <fields>', desc: 'Output JSON with the specified fields' },
+                        ],
+                        examples: [
+                            { comment: '# List releases', code: 'gh release list' },
+                            { comment: '# Exclude drafts and pre-releases', code: 'gh release list --exclude-drafts --exclude-pre-releases' },
+                        ]
+                    },
+                    {
+                        id: 'release-view', name: 'gh release view', desc: 'View information about a GitHub release.',
+                        syntax: 'gh release view [<tag>] [flags]',
+                        flags: [
+                            { name: '--json <fields>', desc: 'Output JSON with the specified fields' },
+                            { name: '--web, -w', desc: 'Open the release in the browser' },
+                        ],
+                        examples: [
+                            { comment: '# View latest release', code: 'gh release view' },
+                            { comment: '# View specific release', code: 'gh release view v1.2.0' },
+                            { comment: '# Get release info as JSON', code: 'gh release view --json tagName,name,body' },
+                        ]
+                    },
+                    {
+                        id: 'release-download', name: 'gh release download', desc: 'Download release assets.',
+                        syntax: 'gh release download [<tag>] [flags]',
+                        flags: [
+                            { name: '--dir, -D <path>', desc: 'The directory to download files into (default ".")' },
+                            { name: '--pattern, -p <glob>', desc: 'Download only assets that match a glob pattern' },
+                            { name: '--archive <format>', desc: 'Download the source code archive in the specified format (zip or tar.gz)' },
+                            { name: '--clobber', desc: 'Overwrite existing files of the same name' },
+                            { name: '--output, -O <file>', desc: 'The file to write a single asset to (use "-" for stdout)' },
+                        ],
+                        examples: [
+                            { comment: '# Download all assets from latest release', code: 'gh release download' },
+                            { comment: '# Download assets matching a pattern', code: 'gh release download v1.2.0 --pattern "*.tar.gz"' },
+                            { comment: '# Download source archive', code: 'gh release download --archive tar.gz' },
+                        ]
+                    },
+                    {
+                        id: 'release-upload', name: 'gh release upload', desc: 'Upload assets to a GitHub release.',
+                        syntax: 'gh release upload <tag> <files>... [flags]',
+                        flags: [
+                            { name: '--clobber', desc: 'Overwrite existing assets of the same name' },
+                        ],
+                        examples: [
+                            { comment: '# Upload files to a release', code: 'gh release upload v1.2.0 ./dist/*.zip' },
+                            { comment: '# Upload and overwrite existing', code: 'gh release upload v1.2.0 app.tar.gz --clobber' },
+                        ]
+                    },
+                    {
+                        id: 'release-edit', name: 'gh release edit', desc: 'Edit a release.',
+                        syntax: 'gh release edit <tag> [flags]',
+                        flags: [
+                            { name: '--title <string>', desc: 'Release title' },
+                            { name: '--notes <string>', desc: 'Release notes' },
+                            { name: '--draft', desc: 'Save as draft' },
+                            { name: '--prerelease', desc: 'Mark as prerelease' },
+                            { name: '--latest', desc: 'Explicitly mark as the latest release' },
+                            { name: '--tag <string>', desc: 'The name of the tag' },
+                            { name: '--target <branch>', desc: 'Target branch or full commit SHA' },
+                        ],
+                        examples: [
+                            { comment: '# Update release notes', code: 'gh release edit v1.2.0 --notes "Updated notes"' },
+                            { comment: '# Publish a draft', code: 'gh release edit v1.2.0 --draft=false' },
+                        ]
+                    },
+                    {
+                        id: 'release-delete', name: 'gh release delete', desc: 'Delete a GitHub release.',
+                        syntax: 'gh release delete <tag> [flags]',
+                        flags: [
+                            { name: '--yes, -y', desc: 'Skip the confirmation prompt' },
+                            { name: '--cleanup-tag', desc: 'Delete the specified tag in addition to the release' },
+                        ],
+                        examples: [
+                            { comment: '# Delete a release', code: 'gh release delete v1.2.0' },
+                            { comment: '# Delete release and tag', code: 'gh release delete v1.2.0 --cleanup-tag --yes' },
+                        ]
+                    },
+                ]
+            },
+            {
+                id: 'gist', label: 'gist', icon: '📄', cls: 'cat-gist',
+                desc: 'Manage GitHub Gists',
+                commands: [
+                    {
+                        id: 'gist-create', name: 'gh gist create', desc: 'Create a new GitHub Gist with given contents.',
+                        syntax: 'gh gist create [<filename>... | -] [flags]',
+                        flags: [
+                            { name: '--desc, -d <string>', desc: 'A description for this gist' },
+                            { name: '--filename, -f <string>', desc: 'Provide a filename to be used when reading from stdin' },
+                            { name: '--public, -p', desc: 'List the gist publicly (default: secret)' },
+                            { name: '--web, -w', desc: 'Open the web browser with created gist' },
+                        ],
+                        examples: [
+                            { comment: '# Create gist from a file', code: 'gh gist create script.py' },
+                            { comment: '# Create a public gist', code: 'gh gist create --public script.py --desc "My script"' },
+                            { comment: '# Create from stdin', code: 'echo "hello world" | gh gist create --filename hello.txt' },
+                            { comment: '# Create from multiple files', code: 'gh gist create file1.txt file2.txt' },
+                        ]
+                    },
+                    {
+                        id: 'gist-list', name: 'gh gist list', desc: 'List your gists.',
+                        syntax: 'gh gist list [flags]',
+                        flags: [
+                            { name: '--limit, -L <int>', desc: 'Maximum number of gists to fetch (default 10)' },
+                            { name: '--public', desc: 'Show only public gists' },
+                            { name: '--secret', desc: 'Show only secret gists' },
+                        ],
+                        examples: [
+                            { comment: '# List your gists', code: 'gh gist list' },
+                            { comment: '# List public gists', code: 'gh gist list --public --limit 20' },
+                        ]
+                    },
+                    {
+                        id: 'gist-view', name: 'gh gist view', desc: 'View a gist.',
+                        syntax: 'gh gist view {<id> | <url>} [flags]',
+                        flags: [
+                            { name: '--filename, -f <string>', desc: 'Display a single file from the gist' },
+                            { name: '--raw, -r', desc: 'Print raw instead of rendered gist contents' },
+                            { name: '--web, -w', desc: 'Open gist in the browser' },
+                        ],
+                        examples: [
+                            { comment: '# View a gist', code: 'gh gist view abc123def456' },
+                            { comment: '# View a specific file', code: 'gh gist view abc123def456 --filename script.py' },
+                            { comment: '# Open in browser', code: 'gh gist view abc123def456 --web' },
+                        ]
+                    },
+                    {
+                        id: 'gist-edit', name: 'gh gist edit', desc: 'Edit one of your gists.',
+                        syntax: 'gh gist edit {<id> | <url>} [<filename>] [flags]',
+                        flags: [
+                            { name: '--add-file <file>', desc: 'Add a new file to the gist' },
+                            { name: '--remove-file <file>', desc: 'Remove a file from the gist' },
+                            { name: '--desc, -d <string>', desc: 'New description for the gist' },
+                            { name: '--filename, -f <string>', desc: 'Select a file to edit' },
+                        ],
+                        examples: [
+                            { comment: '# Edit a gist in your editor', code: 'gh gist edit abc123def456' },
+                            { comment: '# Add a file to an existing gist', code: 'gh gist edit abc123def456 --add-file new_file.py' },
+                        ]
+                    },
+                    {
+                        id: 'gist-clone', name: 'gh gist clone', desc: 'Clone a gist locally.',
+                        syntax: 'gh gist clone {<id> | <url>} [<directory>] [-- <gitflags>...]',
+                        flags: [],
+                        examples: [
+                            { comment: '# Clone a gist', code: 'gh gist clone abc123def456' },
+                            { comment: '# Clone to a specific directory', code: 'gh gist clone abc123def456 my-gist' },
+                        ]
+                    },
+                    {
+                        id: 'gist-delete', name: 'gh gist delete', desc: 'Delete a gist.',
+                        syntax: 'gh gist delete {<id> | <url>}',
+                        flags: [],
+                        examples: [
+                            { comment: '# Delete a gist', code: 'gh gist delete abc123def456' },
+                        ]
+                    },
+                    {
+                        id: 'gist-rename', name: 'gh gist rename', desc: 'Rename a file in a gist.',
+                        syntax: 'gh gist rename {<id> | <url>} <oldFilename> <newFilename>',
+                        flags: [],
+                        examples: [
+                            { comment: '# Rename a file in a gist', code: 'gh gist rename abc123def456 old.py new.py' },
+                        ]
+                    },
+                ]
+            },
+            {
+                id: 'secret', label: 'secret', icon: '🔐', cls: 'cat-secret',
+                desc: 'Manage GitHub Actions secrets',
+                commands: [
+                    {
+                        id: 'secret-set', name: 'gh secret set', desc: 'Create or update secrets.',
+                        syntax: 'gh secret set <secret-name> [flags]',
+                        flags: [
+                            { name: '--body, -b <string>', desc: 'The value for the secret (reads from stdin if not provided)' },
+                            { name: '--env-file, -f <file>', desc: 'Load secret name and value pairs from a dotenv-formatted file' },
+                            { name: '--env, -e <environment>', desc: 'Set deployment environment secret' },
+                            { name: '--org, -o <organization>', desc: 'Set organization secret' },
+                            { name: '--repos, -r <repositories>', desc: 'List of repos that can access an org secret' },
+                            { name: '--user, -u', desc: 'Set a secret for your user' },
+                            { name: '--visibility, -v <string>', desc: 'Set visibility for org secret: all, private, or selected' },
+                            { name: '--no-store', desc: 'Print the encrypted, base64-encoded value instead of storing it' },
+                        ],
+                        examples: [
+                            { comment: '# Set secret from stdin', code: 'echo "mysecretvalue" | gh secret set MY_SECRET' },
+                            { comment: '# Set secret with body flag', code: 'gh secret set MY_API_KEY --body "abc123xyz"' },
+                            { comment: '# Set from .env file', code: 'gh secret set --env-file .env' },
+                            { comment: '# Set an environment secret', code: 'gh secret set DEPLOY_KEY --env production' },
+                            { comment: '# Set an org-level secret', code: 'gh secret set SHARED_KEY --org my-org --visibility all' },
+                        ]
+                    },
+                    {
+                        id: 'secret-list', name: 'gh secret list', desc: 'List secrets.',
+                        syntax: 'gh secret list [flags]',
+                        flags: [
+                            { name: '--env, -e <environment>', desc: 'List secrets for an environment' },
+                            { name: '--org, -o <organization>', desc: 'List secrets for an organization' },
+                            { name: '--user, -u', desc: 'List a secret for your user' },
+                            { name: '--json <fields>', desc: 'Output JSON with the specified fields' },
+                        ],
+                        examples: [
+                            { comment: '# List repo secrets', code: 'gh secret list' },
+                            { comment: '# List org secrets', code: 'gh secret list --org my-org' },
+                            { comment: '# List environment secrets', code: 'gh secret list --env production' },
+                        ]
+                    },
+                    {
+                        id: 'secret-delete', name: 'gh secret delete', desc: 'Delete secrets.',
+                        syntax: 'gh secret delete <secret-name> [flags]',
+                        flags: [
+                            { name: '--env, -e <environment>', desc: 'Delete a secret for an environment' },
+                            { name: '--org, -o <organization>', desc: 'Delete a secret for an organization' },
+                            { name: '--user, -u', desc: 'Delete a secret for your user' },
+                        ],
+                        examples: [
+                            { comment: '# Delete a secret', code: 'gh secret delete MY_SECRET' },
+                            { comment: '# Delete environment secret', code: 'gh secret delete DEPLOY_KEY --env production' },
+                        ]
+                    },
+                ]
+            },
+            {
+                id: 'codespace', label: 'codespace', icon: '☁️', cls: 'cat-codespace',
+                desc: 'Manage GitHub Codespaces',
+                commands: [
+                    {
+                        id: 'codespace-create', name: 'gh codespace create', desc: 'Create a codespace.',
+                        syntax: 'gh codespace create [flags]',
+                        flags: [
+                            { name: '--repo, -R <string>', desc: 'Initialize codespace repository' },
+                            { name: '--branch, -b <string>', desc: 'Repository branch' },
+                            { name: '--machine, -m <string>', desc: 'Hardware specifications for the codespace' },
+                            { name: '--display-name, -d <name>', desc: 'Display name for the codespace (48 characters or less)' },
+                            { name: '--devcontainer-path <path>', desc: 'Path to the devcontainer.json file to use for the codespace' },
+                            { name: '--idle-timeout <duration>', desc: 'Allowed inactivity before codespace is stopped (e.g., "10m", "1h")' },
+                            { name: '--location, -l <string>', desc: 'Location: EastUs, SouthEastAsia, WestEurope, WestUs2' },
+                            { name: '--retention-period <duration>', desc: 'Allowed time after shutting down before the codespace is automatically deleted' },
+                            { name: '--web, -w', desc: 'Create codespace in browser, rather than on a command line' },
+                        ],
+                        examples: [
+                            { comment: '# Create codespace for current repo', code: 'gh codespace create' },
+                            { comment: '# Create for a specific repo and branch', code: 'gh codespace create --repo octocat/hello-world --branch main' },
+                            { comment: '# Create with a specific machine type', code: 'gh codespace create --machine standardLinux32gb' },
+                        ]
+                    },
+                    {
+                        id: 'codespace-list', name: 'gh codespace list', desc: 'List codespaces.',
+                        syntax: 'gh codespace list [flags]',
+                        flags: [
+                            { name: '--limit, -L <int>', desc: 'Maximum number of codespaces to list (default 30)' },
+                            { name: '--repo, -R <string>', desc: 'Filter codespace by repository name' },
+                            { name: '--org, -o <login>', desc: 'The login handle of the organization to list codespaces for' },
+                            { name: '--json <fields>', desc: 'Output JSON with the specified fields' },
+                        ],
+                        examples: [
+                            { comment: '# List your codespaces', code: 'gh codespace list' },
+                            { comment: '# Filter by repo', code: 'gh codespace list --repo owner/repo' },
+                        ]
+                    },
+                    {
+                        id: 'codespace-ssh', name: 'gh codespace ssh', desc: 'SSH into a codespace.',
+                        syntax: 'gh codespace ssh [flags] [-- <ssh-flags>] [<command>]',
+                        flags: [
+                            { name: '--codespace, -c <string>', desc: 'Name of the codespace' },
+                            { name: '--profile <string>', desc: 'Name of the SSH profile to use' },
+                            { name: '--server-port <int>', desc: 'SSH server port number (0 => pick unused)' },
+                            { name: '--config', desc: 'Write OpenSSH configuration to stdout' },
+                        ],
+                        examples: [
+                            { comment: '# SSH into a codespace', code: 'gh codespace ssh' },
+                            { comment: '# SSH into a specific codespace', code: 'gh codespace ssh --codespace my-codespace-name' },
+                            { comment: '# Run a command', code: 'gh codespace ssh -- "ls -la"' },
+                        ]
+                    },
+                    {
+                        id: 'codespace-stop', name: 'gh codespace stop', desc: 'Stop a running codespace.',
+                        syntax: 'gh codespace stop [flags]',
+                        flags: [{ name: '--codespace, -c <string>', desc: 'Name of the codespace' }],
+                        examples: [
+                            { comment: '# Stop current codespace', code: 'gh codespace stop' },
+                        ]
+                    },
+                    {
+                        id: 'codespace-delete', name: 'gh codespace delete', desc: 'Delete codespaces.',
+                        syntax: 'gh codespace delete [flags]',
+                        flags: [
+                            { name: '--codespace, -c <string>', desc: 'Name of the codespace' },
+                            { name: '--all', desc: 'Delete all codespaces' },
+                            { name: '--days <N>', desc: 'Delete codespaces older than N days' },
+                            { name: '--force, -f', desc: 'Skip confirmation for codespaces with unsaved changes' },
+                        ],
+                        examples: [
+                            { comment: '# Delete a codespace', code: 'gh codespace delete --codespace my-codespace' },
+                            { comment: '# Delete all codespaces', code: 'gh codespace delete --all' },
+                            { comment: '# Delete old codespaces', code: 'gh codespace delete --days 30' },
+                        ]
+                    },
+                    {
+                        id: 'codespace-code', name: 'gh codespace code', desc: 'Open a codespace in Visual Studio Code.',
+                        syntax: 'gh codespace code [flags]',
+                        flags: [
+                            { name: '--codespace, -c <string>', desc: 'Name of the codespace' },
+                            { name: '--insiders, -i', desc: 'Use the insiders version of VS Code' },
+                            { name: '--web, -w', desc: 'Use VS Code for the Web' },
+                        ],
+                        examples: [
+                            { comment: '# Open in VS Code', code: 'gh codespace code' },
+                            { comment: '# Open in VS Code Insiders', code: 'gh codespace code --insiders' },
+                            { comment: '# Open in VS Code for the Web', code: 'gh codespace code --web' },
+                        ]
+                    },
+                    {
+                        id: 'codespace-ports', name: 'gh codespace ports', desc: 'List ports in a codespace.',
+                        syntax: 'gh codespace ports [flags]',
+                        flags: [
+                            { name: '--codespace, -c <string>', desc: 'Name of the codespace' },
+                            { name: '--json <fields>', desc: 'Output JSON with the specified fields' },
+                        ],
+                        examples: [
+                            { comment: '# List codespace ports', code: 'gh codespace ports' },
+                        ]
+                    },
+                ]
+            },
+            {
+                id: 'search', label: 'search', icon: '🔍', cls: 'cat-search',
+                desc: 'Search GitHub repositories, code, commits, and more',
+                commands: [
+                    {
+                        id: 'search-repos', name: 'gh search repos', desc: 'Search for repositories.',
+                        syntax: 'gh search repos [<query>] [flags]',
+                        flags: [
+                            { name: '--limit, -L <int>', desc: 'Maximum number of results to fetch (default 30)' },
+                            { name: '--language <string>', desc: 'Filter based on the coding language' },
+                            { name: '--owner <strings>', desc: 'Filter on owner' },
+                            { name: '--stars <number>', desc: 'Filter on number of stars' },
+                            { name: '--forks <number>', desc: 'Filter on number of forks' },
+                            { name: '--topic <strings>', desc: 'Filter on topic' },
+                            { name: '--visibility <strings>', desc: 'Filter based on visibility: public or private' },
+                            { name: '--archived', desc: 'Restrict search to archived repositories' },
+                            { name: '--sort <string>', desc: 'Sort fetched results: forks, help-wanted-issues, stars, updated' },
+                            { name: '--order <string>', desc: 'Order of results: asc or desc' },
+                            { name: '--json <fields>', desc: 'Output JSON with the specified fields' },
+                            { name: '--web, -w', desc: 'Open the search query in the web browser' },
+                        ],
+                        examples: [
+                            { comment: '# Search for repos', code: 'gh search repos "cli tool"' },
+                            { comment: '# Find popular TypeScript repos', code: 'gh search repos --language typescript --sort stars --limit 10' },
+                            { comment: '# Find repos by owner', code: 'gh search repos --owner octocat' },
+                            { comment: '# Search with a topic', code: 'gh search repos --topic "machine-learning" --sort stars' },
+                        ]
+                    },
+                    {
+                        id: 'search-issues', name: 'gh search issues', desc: 'Search for issues across GitHub.',
+                        syntax: 'gh search issues [<query>] [flags]',
+                        flags: [
+                            { name: '--limit, -L <int>', desc: 'Maximum number of results to fetch (default 30)' },
+                            { name: '--state <strings>', desc: 'Filter based on state: open or closed' },
+                            { name: '--label <strings>', desc: 'Filter on label' },
+                            { name: '--language <string>', desc: 'Filter based on the coding language' },
+                            { name: '--owner <strings>', desc: 'Filter on owner' },
+                            { name: '--repo <strings>', desc: 'Filter on repository' },
+                            { name: '--sort <string>', desc: 'Sort fetched results: comments, created, interactions, reactions, etc.' },
+                            { name: '--assignee <string>', desc: 'Filter on assignee' },
+                            { name: '--author <string>', desc: 'Filter on author' },
+                            { name: '--mentions <string>', desc: 'Filter based on user mentions' },
+                            { name: '--no-assignee', desc: 'Filter on missing assignee' },
+                            { name: '--no-label', desc: 'Filter on missing label' },
+                            { name: '--json <fields>', desc: 'Output JSON with the specified fields' },
+                        ],
+                        examples: [
+                            { comment: '# Search for open issues', code: 'gh search issues "react hook" --state open' },
+                            { comment: '# Search by label', code: 'gh search issues --label "good first issue" --repo cli/cli' },
+                            { comment: '# Find issues assigned to me', code: 'gh search issues --assignee @me' },
+                        ]
+                    },
+                    {
+                        id: 'search-prs', name: 'gh search prs', desc: 'Search for pull requests.',
+                        syntax: 'gh search prs [<query>] [flags]',
+                        flags: [
+                            { name: '--limit, -L <int>', desc: 'Maximum number of results to fetch (default 30)' },
+                            { name: '--state <strings>', desc: 'Filter by state: open, closed, or merged' },
+                            { name: '--draft', desc: 'Filter based on draft status' },
+                            { name: '--base <string>', desc: 'Filter on base branch name' },
+                            { name: '--head <string>', desc: 'Filter on head branch name' },
+                            { name: '--label <strings>', desc: 'Filter on label' },
+                            { name: '--repo <strings>', desc: 'Filter on repository' },
+                            { name: '--author <string>', desc: 'Filter on author' },
+                            { name: '--sort <string>', desc: 'Sort fetched results' },
+                            { name: '--json <fields>', desc: 'Output JSON with the specified fields' },
+                        ],
+                        examples: [
+                            { comment: '# Search for merged PRs', code: 'gh search prs --state merged --repo cli/cli' },
+                            { comment: '# Find your open PRs', code: 'gh search prs --author @me --state open' },
+                        ]
+                    },
+                    {
+                        id: 'search-commits', name: 'gh search commits', desc: 'Search for commits.',
+                        syntax: 'gh search commits [<query>] [flags]',
+                        flags: [
+                            { name: '--limit, -L <int>', desc: 'Maximum number of results to fetch (default 30)' },
+                            { name: '--author <string>', desc: 'Filter by author' },
+                            { name: '--author-email <string>', desc: 'Filter based on author email' },
+                            { name: '--committer <string>', desc: 'Filter based on committer' },
+                            { name: '--repo <strings>', desc: 'Filter on repository' },
+                            { name: '--sort <string>', desc: 'Sort fetched results: author-date or committer-date' },
+                            { name: '--order <string>', desc: 'Order of results returned: asc or desc' },
+                            { name: '--hash <string>', desc: 'Filter by commit hash' },
+                            { name: '--merge', desc: 'Restrict search to merge commits' },
+                            { name: '--json <fields>', desc: 'Output JSON with the specified fields' },
+                        ],
+                        examples: [
+                            { comment: '# Search for commits mentioning a fix', code: 'gh search commits "fix memory leak"' },
+                            { comment: '# Search commits by author', code: 'gh search commits --author octocat --repo octocat/hello-world' },
+                        ]
+                    },
+                    {
+                        id: 'search-code', name: 'gh search code', desc: 'Search within code.',
+                        syntax: 'gh search code <query> [flags]',
+                        flags: [
+                            { name: '--limit, -L <int>', desc: 'Maximum number of results to fetch (default 30)' },
+                            { name: '--language <string>', desc: 'Filter by coding language' },
+                            { name: '--owner <strings>', desc: 'Filter on owner' },
+                            { name: '--repo <strings>', desc: 'Filter on repository' },
+                            { name: '--extension <string>', desc: 'Filter on file extension' },
+                            { name: '--filename <string>', desc: 'Filter on filename' },
+                            { name: '--path <string>', desc: 'Filter on path' },
+                            { name: '--size <string>', desc: 'Filter on size' },
+                            { name: '--json <fields>', desc: 'Output JSON with the specified fields' },
+                            { name: '--web, -w', desc: 'Open the search query in the web browser' },
+                        ],
+                        examples: [
+                            { comment: '# Search for code', code: 'gh search code "TODO fixme" --language javascript' },
+                            { comment: '# Search in a specific repo', code: 'gh search code "useEffect" --repo owner/repo' },
+                            { comment: '# Search by filename', code: 'gh search code "import React" --filename "App.tsx"' },
+                        ]
+                    },
+                ]
+            },
+            {
+                id: 'misc', label: 'misc', icon: '🛠', cls: 'cat-misc',
+                desc: 'Configuration, API, aliases, browse, labels, and more',
+                commands: [
+                    {
+                        id: 'api', name: 'gh api', desc: 'Make an authenticated HTTP request to the GitHub API.',
+                        syntax: 'gh api <endpoint> [flags]',
+                        flags: [
+                            { name: '--method, -X <string>', desc: 'The HTTP method for the request (default "GET")' },
+                            { name: '--header, -H <key:value>', desc: 'Add a HTTP request header in key:value format' },
+                            { name: '--field, -F <key=value>', desc: 'Add a typed parameter in key=value format' },
+                            { name: '--raw-field, -f <key=value>', desc: 'Add a string parameter in key=value format' },
+                            { name: '--input <file>', desc: 'The file to use as body for the HTTP request (use "-" to read stdin)' },
+                            { name: '--paginate', desc: 'Make additional HTTP requests to fetch all pages of results' },
+                            { name: '--jq, -q <string>', desc: 'Query to select values from the response using jq syntax' },
+                            { name: '--template, -t <string>', desc: 'Format JSON output using a Go template expression' },
+                            { name: '--hostname <string>', desc: 'The GitHub hostname for the request' },
+                            { name: '--silent', desc: 'Do not print the response body' },
+                            { name: '--include, -i', desc: 'Include HTTP response status line and headers in the output' },
+                        ],
+                        examples: [
+                            { comment: '# Get current user info', code: 'gh api user' },
+                            { comment: '# Create an issue via REST', code: 'gh api repos/owner/repo/issues --method POST --field title="Bug" --field body="Details"' },
+                            { comment: '# Use GraphQL', code: 'gh api graphql --field query=\'{ viewer { login } }\'' },
+                            { comment: '# Paginate all results', code: 'gh api /repos/cli/cli/issues --paginate' },
+                            { comment: '# Filter with jq', code: 'gh api /repos/owner/repo/releases --jq \'.[0].tag_name\'' },
+                        ]
+                    },
+                    {
+                        id: 'config-set', name: 'gh config set', desc: 'Update configuration with a value for the given key.',
+                        syntax: 'gh config set <key> <value> [flags]',
+                        flags: [
+                            { name: '--host, -h <string>', desc: 'Set per-host setting' },
+                        ],
+                        examples: [
+                            { comment: '# Set editor', code: 'gh config set editor vim' },
+                            { comment: '# Set git protocol', code: 'gh config set git_protocol ssh' },
+                            { comment: '# Set browser', code: 'gh config set browser firefox' },
+                            { comment: '# Disable prompts', code: 'gh config set prompt disabled' },
+                        ]
+                    },
+                    {
+                        id: 'config-get', name: 'gh config get', desc: 'Print the value of a given configuration key.',
+                        syntax: 'gh config get <key> [flags]',
+                        flags: [
+                            { name: '--host, -h <string>', desc: 'Get per-host configuration' },
+                        ],
+                        examples: [
+                            { comment: '# Get editor', code: 'gh config get editor' },
+                            { comment: '# Get git protocol', code: 'gh config get git_protocol' },
+                        ]
+                    },
+                    {
+                        id: 'config-list', name: 'gh config list', desc: 'Print a list of configuration keys and values.',
+                        syntax: 'gh config list [flags]',
+                        flags: [
+                            { name: '--host, -h <string>', desc: 'Get per-host configuration' },
+                        ],
+                        examples: [
+                            { comment: '# List all config', code: 'gh config list' },
+                        ]
+                    },
+                    {
+                        id: 'alias-set', name: 'gh alias set', desc: 'Create a shortcut for a gh command.',
+                        syntax: 'gh alias set <alias> <expansion> [flags]',
+                        flags: [
+                            { name: '--shell, -s', desc: 'Declare an alias to be passed through a shell interpreter' },
+                        ],
+                        examples: [
+                            { comment: '# Create alias for common command', code: 'gh alias set pv "pr view"' },
+                            { comment: '# Create shell alias', code: 'gh alias set bugs \'issue list --label="bug"\'' },
+                            { comment: '# Use the alias', code: 'gh pv 123' },
+                        ]
+                    },
+                    {
+                        id: 'alias-list', name: 'gh alias list', desc: 'List your aliases.',
+                        syntax: 'gh alias list',
+                        flags: [],
+                        examples: [
+                            { comment: '# List all aliases', code: 'gh alias list' },
+                        ]
+                    },
+                    {
+                        id: 'alias-delete', name: 'gh alias delete', desc: 'Delete set aliases.',
+                        syntax: 'gh alias delete {<alias> | --all}',
+                        flags: [{ name: '--all', desc: 'Delete all aliases' }],
+                        examples: [
+                            { comment: '# Delete an alias', code: 'gh alias delete pv' },
+                            { comment: '# Delete all aliases', code: 'gh alias delete --all' },
+                        ]
+                    },
+                    {
+                        id: 'browse', name: 'gh browse', desc: 'Open the repository in the browser.',
+                        syntax: 'gh browse [<number> | <path> | <commit-SHA>] [flags]',
+                        flags: [
+                            { name: '--branch, -b <string>', desc: 'Select another branch by passing the branch name' },
+                            { name: '--commit, -c <sha>', desc: 'Open the repo at a specific commit SHA' },
+                            { name: '--no-browser, -n', desc: 'Print destination URL instead of opening the browser' },
+                            { name: '--projects, -p', desc: 'Open repository projects tab' },
+                            { name: '--releases, -r', desc: 'Open repository releases tab' },
+                            { name: '--settings, -s', desc: 'Open repository settings' },
+                            { name: '--wiki, -w', desc: 'Open repository wiki' },
+                        ],
+                        examples: [
+                            { comment: '# Open repo in browser', code: 'gh browse' },
+                            { comment: '# Open specific issue or PR', code: 'gh browse 42' },
+                            { comment: '# Open a specific file', code: 'gh browse src/main.go' },
+                            { comment: '# Print URL without opening browser', code: 'gh browse --no-browser' },
+                            { comment: '# Open releases tab', code: 'gh browse --releases' },
+                        ]
+                    },
+                    {
+                        id: 'status', name: 'gh status', desc: 'Print information about relevant issues, PRs, and notifications.',
+                        syntax: 'gh status [flags]',
+                        flags: [
+                            { name: '--org, -o <string>', desc: 'List only notifications for given org' },
+                            { name: '--exclude, -e <strings>', desc: 'Comma separated list of repos to exclude in owner/repo format' },
+                        ],
+                        examples: [
+                            { comment: '# Show your GitHub status', code: 'gh status' },
+                            { comment: '# Filter to an org', code: 'gh status --org my-org' },
+                        ]
+                    },
+                    {
+                        id: 'label-list', name: 'gh label list', desc: 'List labels in a GitHub repository.',
+                        syntax: 'gh label list [flags]',
+                        flags: [
+                            { name: '--limit, -L <int>', desc: 'Maximum number of labels to fetch (default 30)' },
+                            { name: '--order <string>', desc: 'Order of labels returned: asc or desc' },
+                            { name: '--search, -S <string>', desc: 'Search label names and descriptions' },
+                            { name: '--sort <string>', desc: 'Sort fetched labels: created or name' },
+                            { name: '--json <fields>', desc: 'Output JSON with the specified fields' },
+                            { name: '--web, -w', desc: 'Open the browser to list labels' },
+                        ],
+                        examples: [
+                            { comment: '# List labels', code: 'gh label list' },
+                            { comment: '# Search for labels', code: 'gh label list --search bug' },
+                        ]
+                    },
+                    {
+                        id: 'label-create', name: 'gh label create', desc: 'Create a label in a GitHub repository.',
+                        syntax: 'gh label create <name> [flags]',
+                        flags: [
+                            { name: '--color, -c <string>', desc: 'Color of the label in 6-digit hex without leading #' },
+                            { name: '--description, -d <string>', desc: 'Description of the label' },
+                            { name: '--force, -f', desc: 'Update the label color and description if it already exists' },
+                        ],
+                        examples: [
+                            { comment: '# Create a label', code: 'gh label create "my label" --description "A cool label" --color FF0000' },
+                        ]
+                    },
+                    {
+                        id: 'label-clone', name: 'gh label clone', desc: 'Clone labels from one repository to another.',
+                        syntax: 'gh label clone <source-repository> [flags]',
+                        flags: [{ name: '--force, -f', desc: 'Overwrite labels in the destination repository' }],
+                        examples: [
+                            { comment: '# Clone labels from another repo', code: 'gh label clone owner/source-repo' },
+                        ]
+                    },
+                    {
+                        id: 'extension-install', name: 'gh extension install', desc: 'Install a gh extension from a repository.',
+                        syntax: 'gh extension install <repository> [flags]',
+                        flags: [
+                            { name: '--force', desc: 'Force upgrade extension, or ignore if latest already installed' },
+                            { name: '--pin <string>', desc: 'Pin extension to a release tag or commit ref' },
+                        ],
+                        examples: [
+                            { comment: '# Install an extension', code: 'gh extension install dlvhdr/gh-dash' },
+                            { comment: '# Install pinned to a version', code: 'gh extension install dlvhdr/gh-dash --pin v1.0.0' },
+                        ]
+                    },
+                    {
+                        id: 'extension-list', name: 'gh extension list', desc: 'List installed extension commands.',
+                        syntax: 'gh extension list',
+                        flags: [],
+                        examples: [
+                            { comment: '# List installed extensions', code: 'gh extension list' },
+                        ]
+                    },
+                    {
+                        id: 'extension-upgrade', name: 'gh extension upgrade', desc: 'Upgrade installed extensions.',
+                        syntax: 'gh extension upgrade {<name> | --all} [flags]',
+                        flags: [
+                            { name: '--all', desc: 'Upgrade all extensions' },
+                            { name: '--dry-run', desc: 'Only display upgrades' },
+                            { name: '--force', desc: 'Force upgrade extension' },
+                        ],
+                        examples: [
+                            { comment: '# Upgrade all extensions', code: 'gh extension upgrade --all' },
+                            { comment: '# Upgrade specific extension', code: 'gh extension upgrade gh-dash' },
+                        ]
+                    },
+                    {
+                        id: 'extension-remove', name: 'gh extension remove', desc: 'Remove an installed extension.',
+                        syntax: 'gh extension remove <name>',
+                        flags: [],
+                        examples: [
+                            { comment: '# Remove an extension', code: 'gh extension remove gh-dash' },
+                        ]
+                    },
+                    {
+                        id: 'ssh-key-add', name: 'gh ssh-key add', desc: 'Add an SSH key to your GitHub account.',
+                        syntax: 'gh ssh-key add [<key-file>] [flags]',
+                        flags: [
+                            { name: '--title, -t <string>', desc: 'Title for the new key' },
+                            { name: '--type, -T <string>', desc: 'Type of the ssh key: authentication or signing' },
+                        ],
+                        examples: [
+                            { comment: '# Add your SSH public key', code: 'gh ssh-key add ~/.ssh/id_ed25519.pub --title "My laptop"' },
+                            { comment: '# Add a signing key', code: 'gh ssh-key add ~/.ssh/id_ed25519.pub --type signing' },
+                        ]
+                    },
+                    {
+                        id: 'ssh-key-list', name: 'gh ssh-key list', desc: 'List SSH keys in your GitHub account.',
+                        syntax: 'gh ssh-key list',
+                        flags: [],
+                        examples: [
+                            { comment: '# List SSH keys', code: 'gh ssh-key list' },
+                        ]
+                    },
+                    {
+                        id: 'variable-set', name: 'gh variable set', desc: 'Create or update variables.',
+                        syntax: 'gh variable set <variable-name> [flags]',
+                        flags: [
+                            { name: '--body, -b <string>', desc: 'The value for the variable' },
+                            { name: '--env-file, -f <file>', desc: 'Load variable names and values pairs from a dotenv-formatted file' },
+                            { name: '--env, -e <environment>', desc: 'Set deployment environment variable' },
+                            { name: '--org, -o <organization>', desc: 'Set organization variable' },
+                            { name: '--repos, -r <repositories>', desc: 'List of repos that can access an org variable' },
+                            { name: '--visibility, -v <string>', desc: 'Set visibility for an org variable' },
+                        ],
+                        examples: [
+                            { comment: '# Set a variable', code: 'gh variable set MY_VAR --body "production"' },
+                            { comment: '# Set from env file', code: 'gh variable set --env-file .env.production' },
+                            { comment: '# Set env variable', code: 'gh variable set MY_VAR --env production --body "value"' },
+                        ]
+                    },
+                    {
+                        id: 'variable-list', name: 'gh variable list', desc: 'List variables.',
+                        syntax: 'gh variable list [flags]',
+                        flags: [
+                            { name: '--env, -e <environment>', desc: 'List variables for an environment' },
+                            { name: '--org, -o <organization>', desc: 'List variables for an organization' },
+                            { name: '--json <fields>', desc: 'Output JSON with the specified fields' },
+                        ],
+                        examples: [
+                            { comment: '# List repo variables', code: 'gh variable list' },
+                            { comment: '# List env variables', code: 'gh variable list --env production' },
+                        ]
+                    },
+                    {
+                        id: 'completion', name: 'gh completion', desc: 'Generate shell completion scripts.',
+                        syntax: 'gh completion -s <shell>',
+                        flags: [
+                            { name: '--shell, -s <string>', desc: 'Shell type: bash, zsh, fish, or powershell' },
+                        ],
+                        examples: [
+                            { comment: '# Generate bash completions', code: 'gh completion -s bash > ~/.bash_completion' },
+                            { comment: '# Generate zsh completions', code: 'gh completion -s zsh > ~/.zsh/_gh' },
+                            { comment: '# Generate fish completions', code: 'gh completion -s fish > ~/.config/fish/completions/gh.fish' },
+                        ]
+                    },
+                    {
+                        id: 'cache-list', name: 'gh cache list', desc: 'List GitHub Actions caches.',
+                        syntax: 'gh cache list [flags]',
+                        flags: [
+                            { name: '--limit, -L <int>', desc: 'Maximum number of caches to fetch (default 30)' },
+                            { name: '--ref <string>', desc: 'Filter by fully qualified ref' },
+                            { name: '--key, -k <string>', desc: 'Filter by cache key prefix' },
+                            { name: '--order <string>', desc: 'Order of caches returned: asc or desc' },
+                            { name: '--sort <string>', desc: 'Sort fetched caches: created_at, last_accessed_at, or size_in_bytes' },
+                            { name: '--json <fields>', desc: 'Output JSON with the specified fields' },
+                        ],
+                        examples: [
+                            { comment: '# List caches', code: 'gh cache list' },
+                            { comment: '# Filter by key prefix', code: 'gh cache list --key node-modules-' },
+                        ]
+                    },
+                    {
+                        id: 'cache-delete', name: 'gh cache delete', desc: 'Delete GitHub Actions caches.',
+                        syntax: 'gh cache delete [<cache-id>| <cache-key> | --all] [flags]',
+                        flags: [
+                            { name: '--all, -a', desc: 'Delete all caches' },
+                        ],
+                        examples: [
+                            { comment: '# Delete all caches', code: 'gh cache delete --all' },
+                            { comment: '# Delete by key', code: 'gh cache delete node-modules-abc123' },
+                        ]
+                    },
+                ]
+            },
+        ];
+
+        // ══════════════════════════════════════════════════════════════
+        // BUILD
+        // ══════════════════════════════════════════════════════════════
+        function escapeHtml(str) {
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        // Flat command index for search
+        const COMMAND_INDEX = [];
+        CATEGORIES.forEach(cat => {
+            cat.commands.forEach(cmd => {
+                COMMAND_INDEX.push({ id: cmd.id, name: cmd.name, desc: cmd.desc, cat: cat.label });
+            });
+        });
+
+        // Count stats
+        document.getElementById('statCmds').textContent = COMMAND_INDEX.length;
+        let totalExamples = 0;
+        CATEGORIES.forEach(cat => cat.commands.forEach(cmd => totalExamples += cmd.examples.length));
+        document.getElementById('statExamples').textContent = totalExamples;
+
+        // ── BUILD SIDEBAR ──
+        function buildSidebar() {
+            const nav = document.getElementById('sidebarNav');
+            nav.innerHTML = '';
+            CATEGORIES.forEach(cat => {
+                const catDiv = document.createElement('div');
+                catDiv.className = `nav-category ${cat.cls}`;
+                catDiv.dataset.cat = cat.id;
+
+                const header = document.createElement('div');
+                header.className = 'nav-cat-header';
+                header.innerHTML = `
+      <div class="nav-cat-icon">${cat.icon}</div>
+      <span class="nav-cat-label">${cat.label}</span>
+      <span class="nav-cat-arrow">▾</span>
+    `;
+                header.addEventListener('click', () => toggleCategory(catDiv, header));
+
+                const items = document.createElement('div');
+                items.className = 'nav-cat-items';
+                items.style.maxHeight = '2000px';
+
+                cat.commands.forEach(cmd => {
+                    const item = document.createElement('a');
+                    item.className = 'nav-item';
+                    item.dataset.id = cmd.id;
+                    item.dataset.name = cmd.name.toLowerCase();
+                    const shortName = cmd.name.replace('gh ', '');
+                    item.innerHTML = `<span class="nav-item-dot"></span>${escapeHtml(shortName)}`;
+                    item.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        scrollToCmd(cmd.id);
+                        closeMobileSidebar();
+                    });
+                    items.appendChild(item);
+                });
+
+                catDiv.appendChild(header);
+                catDiv.appendChild(items);
+                nav.appendChild(catDiv);
+            });
+        }
+
+        function toggleCategory(catDiv, header) {
+            const items = catDiv.querySelector('.nav-cat-items');
+            const isCollapsed = items.classList.contains('collapsed');
+            if (isCollapsed) {
+                items.style.maxHeight = items.scrollHeight + 'px';
+                items.classList.remove('collapsed');
+                header.classList.remove('collapsed');
+            } else {
+                items.style.maxHeight = '0';
+                items.classList.add('collapsed');
+                header.classList.add('collapsed');
+            }
+        }
+
+        // ── BUILD CONTENT ──
+        function buildContent() {
+            const container = document.getElementById('commandContent');
+            container.innerHTML = '';
+
+            CATEGORIES.forEach(cat => {
+                const section = document.createElement('section');
+                section.className = `cmd-section ${cat.cls}`;
+                section.id = `cat-${cat.id}`;
+
+                const header = document.createElement('div');
+                header.className = 'section-header';
+                header.innerHTML = `
+      <div class="section-icon">${cat.icon}</div>
+      <span class="section-title">gh ${cat.label}</span>
+      <span class="section-desc" style="display:none">${cat.commands.length} cmds</span>
+      <span class="section-toggle">▾</span>
+    `;
+                header.addEventListener('click', () => {
+                    const body = section.querySelector('.section-body');
+                    const isC = body.classList.contains('collapsed');
+                    if (isC) {
+                        body.style.maxHeight = body.scrollHeight + 'px';
+                        body.classList.remove('collapsed');
+                        header.classList.remove('collapsed');
+                    } else {
+                        body.style.maxHeight = '0';
+                        body.classList.add('collapsed');
+                        header.classList.add('collapsed');
+                    }
+                });
+
+                const body = document.createElement('div');
+                body.className = 'section-body';
+                body.style.maxHeight = '100000px';
+
+                cat.commands.forEach(cmd => {
+                    body.appendChild(buildCmdCard(cmd));
+                });
+
+                section.appendChild(header);
+                section.appendChild(body);
+                container.appendChild(section);
+
+                // Divider between sections
+                const divider = document.createElement('div');
+                divider.className = 'divider';
+                container.appendChild(divider);
+            });
+        }
+
+        function buildCmdCard(cmd) {
+            const card = document.createElement('div');
+            card.className = 'cmd-card';
+            card.id = cmd.id;
+
+            let flagsHtml = '';
+            if (cmd.flags && cmd.flags.length > 0) {
+                flagsHtml = `<div class="cmd-section-label">Flags</div>
+    <div class="cmd-flags">
+      ${cmd.flags.map(f => `
+        <div class="cmd-flag">
+          <span class="cmd-flag-name">${escapeHtml(f.name)}</span>
+          <span class="cmd-flag-desc">${escapeHtml(f.desc)}</span>
+        </div>`).join('')}
+    </div>`;
+            }
+
+            let examplesHtml = '';
+            if (cmd.examples && cmd.examples.length > 0) {
+                examplesHtml = `<div class="cmd-section-label">Examples</div>
+    <div class="examples-block">
+      ${cmd.examples.map(ex => `
+        <div class="example-item">
+          <div class="example-comment">${escapeHtml(ex.comment)}</div>
+          <div class="example-code-wrap">
+            <div class="example-code">${escapeHtml(ex.code)}</div>
+            <button class="copy-btn" onclick="copyCode(this, ${JSON.stringify(ex.code)})" title="Copy">⧉</button>
+          </div>
+        </div>`).join('')}
+    </div>`;
+            }
+
+            card.innerHTML = `
+    <div class="cmd-card-header">
+      <span class="cmd-badge">cmd</span>
+      <div>
+        <div class="cmd-name">${escapeHtml(cmd.name)}</div>
+        <div class="cmd-short-desc">${escapeHtml(cmd.desc)}</div>
+      </div>
+    </div>
+    <div class="cmd-card-body">
+      <div class="cmd-section-label">Syntax</div>
+      <div class="cmd-syntax">${escapeHtml(cmd.syntax)}</div>
+      ${flagsHtml}
+      ${examplesHtml}
+    </div>
+  `;
+            return card;
+        }
+
+        // ── COPY ──
+        function copyCode(btn, code) {
+            navigator.clipboard.writeText(code).then(() => {
+                btn.classList.add('copied');
+                btn.textContent = '✓';
+                setTimeout(() => { btn.classList.remove('copied'); btn.textContent = '⧉'; }, 1500);
+            }).catch(() => {
+                const ta = document.createElement('textarea');
+                ta.value = code;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                btn.classList.add('copied');
+                btn.textContent = '✓';
+                setTimeout(() => { btn.classList.remove('copied'); btn.textContent = '⧉'; }, 1500);
+            });
+        }
+
+        // ── SCROLL ──
+        function scrollToCmd(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            // Make sure parent section is open
+            const sectionBody = el.closest('.section-body');
+            if (sectionBody && sectionBody.classList.contains('collapsed')) {
+                const header = sectionBody.previousElementSibling;
+                sectionBody.style.maxHeight = sectionBody.scrollHeight + 'px';
+                sectionBody.classList.remove('collapsed');
+                if (header) header.classList.remove('collapsed');
+            }
+            const content = document.getElementById('mainContent');
+            const top = el.getBoundingClientRect().top + content.scrollTop - 20;
+            content.scrollTo({ top, behavior: 'smooth' });
+            el.classList.add('highlight');
+            setTimeout(() => el.classList.remove('highlight'), 2000);
+            // Update active nav item
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            const navItem = document.querySelector(`.nav-item[data-id="${id}"]`);
+            if (navItem) {
+                navItem.classList.add('active');
+                navItem.scrollIntoView({ block: 'nearest' });
+            }
+        }
+
+        // ── SIDEBAR FILTER ──
+        let filterDebounce;
+        document.getElementById('sidebarSearch').addEventListener('input', function () {
+            clearTimeout(filterDebounce);
+            filterDebounce = setTimeout(() => filterSidebar(this.value.toLowerCase()), 60);
+        });
+
+        function filterSidebar(q) {
+            document.querySelectorAll('.nav-category').forEach(catEl => {
+                const catId = catEl.dataset.cat;
+                const cat = CATEGORIES.find(c => c.id === catId);
+                let anyVisible = false;
+                catEl.querySelectorAll('.nav-item').forEach(item => {
+                    const name = item.dataset.name || '';
+                    const match = !q || name.includes(q);
+                    item.classList.toggle('hidden', !match);
+                    if (match) anyVisible = true;
+                });
+                catEl.classList.toggle('hidden', !anyVisible);
+                if (q && anyVisible) {
+                    const items = catEl.querySelector('.nav-cat-items');
+                    const header = catEl.querySelector('.nav-cat-header');
+                    if (items && items.classList.contains('collapsed')) {
+                        items.style.maxHeight = '2000px';
+                        items.classList.remove('collapsed');
+                        header && header.classList.remove('collapsed');
+                    }
+                }
+            });
+        }
+
+        // ── COMMAND PALETTE ──
+        const paletteInput = document.getElementById('paletteInput');
+        const paletteDropdown = document.getElementById('paletteDropdown');
+        let palSelection = -1;
+        let palResults = [];
+
+        paletteInput.addEventListener('input', function () {
+            const q = this.value.toLowerCase().trim();
+            if (!q) { paletteDropdown.classList.remove('open'); return; }
+            palResults = COMMAND_INDEX.filter(c =>
+                c.name.toLowerCase().includes(q) || c.desc.toLowerCase().includes(q) || c.cat.includes(q)
+            ).slice(0, 12);
+            palSelection = -1;
+            renderPalette();
+        });
+
+        paletteInput.addEventListener('keydown', function (e) {
+            if (!paletteDropdown.classList.contains('open')) return;
+            if (e.key === 'ArrowDown') { e.preventDefault(); palSelection = Math.min(palSelection + 1, palResults.length - 1); renderPalette(); }
+            else if (e.key === 'ArrowUp') { e.preventDefault(); palSelection = Math.max(palSelection - 1, -1); renderPalette(); }
+            else if (e.key === 'Enter') {
+                e.preventDefault();
+                const item = palSelection >= 0 ? palResults[palSelection] : palResults[0];
+                if (item) { scrollToCmd(item.id); paletteDropdown.classList.remove('open'); paletteInput.value = ''; }
+            }
+            else if (e.key === 'Escape') { paletteDropdown.classList.remove('open'); paletteInput.value = ''; }
+        });
+
+        function renderPalette() {
+            if (!palResults.length) {
+                paletteDropdown.innerHTML = '<div class="palette-empty">No results found</div>';
+                paletteDropdown.classList.add('open');
+                return;
+            }
+            paletteDropdown.innerHTML = palResults.map((r, i) => `
+    <div class="palette-result${i === palSelection ? ' active' : ''}" data-idx="${i}">
+      <span class="palette-result-cmd">${escapeHtml(r.name)}</span>
+      <span class="palette-result-desc">${escapeHtml(r.desc)}</span>
+      <span class="palette-result-cat">${escapeHtml(r.cat)}</span>
+    </div>`).join('');
+            paletteDropdown.classList.add('open');
+            paletteDropdown.querySelectorAll('.palette-result').forEach(el => {
+                el.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    const idx = parseInt(el.dataset.idx);
+                    const item = palResults[idx];
+                    if (item) { scrollToCmd(item.id); paletteDropdown.classList.remove('open'); paletteInput.value = ''; }
+                });
+            });
+        }
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.palette-wrap')) paletteDropdown.classList.remove('open');
+        });
+
+        // ── KEYBOARD SHORTCUT ──
+        document.addEventListener('keydown', (e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                paletteInput.focus();
+                paletteInput.select();
+            }
+        });
+
+        // ── MOBILE SIDEBAR ──
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        const menuBtn = document.getElementById('mobileMenuBtn');
+
+        menuBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('visible');
+        });
+
+        overlay.addEventListener('click', closeMobileSidebar);
+
+        function closeMobileSidebar() {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('visible');
+        }
+
+        // ── SCROLL TO TOP ──
+        const scrollTopBtn = document.getElementById('scrollTop');
+        document.getElementById('mainContent').addEventListener('scroll', function () {
+            scrollTopBtn.classList.toggle('visible', this.scrollTop > 300);
+        });
+
+        scrollTopBtn.addEventListener('click', () => {
+            document.getElementById('mainContent').scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        // ── SCROLL SPY ──
+        let spyDebounce;
+        document.getElementById('mainContent').addEventListener('scroll', function () {
+            clearTimeout(spyDebounce);
+            spyDebounce = setTimeout(() => {
+                const content = this;
+                const scrollTop = content.scrollTop;
+                let active = null;
+                document.querySelectorAll('.cmd-card').forEach(card => {
+                    const top = card.offsetTop;
+                    if (top <= scrollTop + 120) active = card.id;
+                });
+                if (active) {
+                    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                    const navItem = document.querySelector(`.nav-item[data-id="${active}"]`);
+                    if (navItem) {
+                        navItem.classList.add('active');
+                    }
+                }
+            }, 80);
+        });
+
+        // ── INIT ──
+        buildSidebar();
+        buildContent();
+    </script>
+</body>
+
+</html>
