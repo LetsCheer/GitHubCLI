@@ -1,0 +1,1 @@
+Test skip specific file from "git push"
