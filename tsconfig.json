@@ -3,9 +3,12 @@
         "allowJs": true, // Allows JS files to be part of your project
         "checkJs": true, // Enables type checking in those JS files
         "strict": true, // Turns on the strictest checking rules
-        "noEmit": true // Set this to true if you only want type checking without generating new files
+        "noEmit": true, // Set this to true if you only want type checking without generating new files
+        // "noImplicitAny": true, // In TypeScript files: You will be forced to manually define the type (e.g., : string) or explicitly use : any. In JavaScript files (with checkJs): You will be forced to provide a JSDoc comment to define the type.
     },
     "include": [
         "public/js/**/*"
     ] // Ensure your JS folder path is included here
 }
+// **/* means "look in all subfolders and all files."
+// If you don't use include, TypeScript/VS Code defaults to including all files in the root directory (except node_modules).
