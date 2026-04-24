@@ -1,0 +1,11 @@
+{
+    "compilerOptions": {
+        "allowJs": true, // Allows JS files to be part of your project
+        "checkJs": true, // Enables type checking in those JS files
+        "strict": true, // Turns on the strictest checking rules
+        "noEmit": true // Set this to true if you only want type checking without generating new files
+    },
+    "include": [
+        "public/js/**/*"
+    ] // Ensure your JS folder path is included here
+}
